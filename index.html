@@ -144,13 +144,14 @@
             top: calc(100% + 6px);
             left: 0;
             right: 0;
-            background: rgba(10, 15, 30, 0.95);
+            background: rgba(10, 15, 30, 0.98);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 14px;
             overflow: hidden;
             display: none;
-            z-index: 100;
+            z-index: 9999;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
 
         .suggestions.open {
@@ -1330,15 +1331,15 @@
         async function fetchSuggestions(q) {
             try {
                 const data = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=6&appid=${OWM_KEY}`).then(r => r.json());
-                if (!data.length) { suggestionsEl.classList.remove('open'); return; }
+                if (!Array.isArray(data) || !data.length) { suggestionsEl.classList.remove('open'); return; }
                 suggestionsEl.innerHTML = data.map((c, i) =>
                     `<div class="sug-item" data-i="${i}">
-        <span>📍</span>
-        <div>
-          <div>${c.name}${c.state ? ', ' + c.state : ''}</div>
-          <div class="sug-sub">${c.country}${c.state ? '' : ', ' + c.name}</div>
-        </div>
-      </div>`
+                        <span>📍</span>
+                        <div>
+                            <div>${c.name}${c.state ? ', ' + c.state : ''}</div>
+                            <div class="sug-sub">${c.country}</div>
+                        </div>
+                    </div>`
                 ).join('');
                 suggestionsEl.classList.add('open');
                 suggestionsEl.querySelectorAll('.sug-item').forEach((el, i) => {
@@ -1348,7 +1349,7 @@
                         loadWeather(data[i].lat, data[i].lon, data[i].name, data[i].country);
                     });
                 });
-            } catch { }
+            } catch (err) { console.error('suggestions error', err); }
         }
 
         async function doSearch() {
@@ -1509,9 +1510,30 @@
         loop();
 
         /* ══════════════════════════════════════════════════════════
-           AUTO-LOAD: São Paulo as default
+           AUTO-LOAD: geolocalização automática, fallback São Paulo
         ══════════════════════════════════════════════════════════ */
-        loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR');
+        async function loadByCoords(lat, lon) {
+            try {
+                const geo = await fetch(
+                    `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${OWM_KEY}`
+                ).then(r => r.json());
+                const city = geo[0]?.name || 'Localização atual';
+                const country = geo[0]?.country || '';
+                loadWeather(lat, lon, city, country);
+            } catch {
+                loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR');
+            }
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => loadByCoords(pos.coords.latitude, pos.coords.longitude),
+                () => loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR'),
+                { timeout: 6000 }
+            );
+        } else {
+            loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR');
+        }
     </script>
 
     <script type="application/ld+json">
