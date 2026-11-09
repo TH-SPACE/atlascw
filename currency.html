@@ -375,11 +375,41 @@
             ${Array(12).fill('<div class="skeleton" style="height:110px"></div>').join('')}
         </div>
 
+        <!-- AD entre seções — 728x90 / responsive — ativar após aprovação AdSense -->
+        <div
+            style="display:flex;align-items:center;justify-content:center;margin:20px 0;min-height:100px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;position:relative;">
+            <span
+                style="font-size:0.55rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px;position:absolute;top:6px;left:10px">Publicidade</span>
+            <!-- ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                 data-ad-slot="XXXXXXXXXX"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true">
+            </ins -->
+        </div>
+
         <div class="section-title">Todas as moedas</div>
         <div class="rates-grid" id="allRatesGrid">
             ${Array(20).fill('<div class="skeleton" style="height:110px"></div>').join('')}
         </div>
     </div>
+
+    <!-- AD FOOTER fixo — ativar após aprovação AdSense -->
+    <div
+        style="position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(7,9,15,0.9);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,0.07);padding:7px;min-height:66px;position:relative;">
+        <span
+            style="position:absolute;top:2px;left:8px;font-size:0.55rem;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:1px">Publicidade</span>
+        <!-- ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="XXXXXXXXXX"
+             data-ad-format="auto"
+             data-full-width-responsive="true">
+        </ins -->
+    </div>
+
+    <!-- script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script -->
 
     <script>
         const EXCHANGE_KEY = '2c3d34684b416f3cae51daa8';

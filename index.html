@@ -727,6 +727,62 @@
                 padding: 10px 6px;
             }
         }
+
+        /* ── AD SLOTS ── */
+        .ad-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            padding: 7px 0;
+            min-height: 66px;
+        }
+
+        .ad-label {
+            position: absolute;
+            top: 2px;
+            left: 8px;
+            font-size: 0.55rem;
+            color: rgba(255, 255, 255, 0.22);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .ad-side {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 110px;
+            width: 100%;
+            position: relative;
+        }
+
+        /* hide footer ad in TV mode, remove bottom padding */
+        body.tv-mode .ad-footer {
+            display: none;
+        }
+
+        body.tv-mode .app {
+            padding-bottom: 0;
+        }
+
+        /* push app content above footer ad */
+        .app {
+            padding-bottom: 66px;
+        }
     </style>
 </head>
 
@@ -864,9 +920,34 @@
                     </div>
                 </div>
 
+                <!-- AD LATERAL 300x250 — ativar após aprovação AdSense -->
+                <div class="ad-side">
+                    <span class="ad-label">Publicidade</span>
+                    <!-- ins class="adsbygoogle"
+                         style="display:block;width:280px;height:100px"
+                         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                         data-ad-slot="XXXXXXXXXX"
+                         data-ad-format="rectangle">
+                    </ins -->
+                </div>
+
             </div>
         </div>
     </div>
+
+    <!-- AD FOOTER 728x90 fixo no rodapé — ativar após aprovação AdSense -->
+    <div class="ad-footer">
+        <span class="ad-label">Publicidade</span>
+        <!-- ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="XXXXXXXXXX"
+             data-ad-format="auto"
+             data-full-width-responsive="true">
+        </ins -->
+    </div>
+
+    <!-- script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script -->
 
     <script>
         /* ══════════════════════════════════════════════════════════
