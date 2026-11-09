@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atlas — Conversor de Moedas</title>
+    <meta name="description" content="Converta moedas de todo o mundo com taxas em tempo real." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #07090f;
+            --card: #0d1117;
+            --card2: #111827;
+            --border: rgba(255, 255, 255, 0.07);
+            --accent: #3b82f6;
+            --accent2: #60a5fa;
+            --text: #f1f5f9;
+            --muted: #64748b;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.07) 0%, transparent 70%);
+            top: -200px;
+            left: -100px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 28px;
+            background: rgba(7, 9, 15, 0.9);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            color: var(--accent2);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .nav-link {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-link.active {
+            color: var(--accent2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+        }
+
+        /* CONVERTER */
+        .converter-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 28px;
+        }
+
+        .conv-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .conv-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .conv-swap-col {
+                text-align: center;
+                transform: rotate(90deg);
+            }
+        }
+
+        .conv-field label {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .conv-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .conv-input {
+            flex: 1;
+            padding: 14px 16px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1.1rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .conv-input:focus {
+            border-color: var(--accent);
+        }
+
+        .conv-input[readonly] {
+            color: var(--accent2);
+            font-weight: 700;
+            cursor: default;
+        }
+
+        .conv-select {
+            padding: 14px 12px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 0.875rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        .conv-swap-col {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 4px;
+        }
+
+        .swap-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.3s;
+        }
+
+        .swap-btn:hover {
+            background: rgba(59, 130, 246, 0.15);
+            transform: rotate(180deg);
+        }
+
+        .rate-badge {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.875rem;
+            color: var(--accent2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* RATES GRID */
+        .section-title {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .rates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 32px;
+        }
+
+        .rate-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 12px;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .rate-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .rc-flag {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+        }
+
+        .rc-code {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .rc-name {
+            font-size: 0.68rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .rc-val {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--accent2);
+        }
+
+        .rc-base {
+            font-size: 0.65rem;
+            color: var(--muted);
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--card2) 25%, rgba(255, 255, 255, 0.03) 50%, var(--card2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 10px;
+        }
+
+        @keyframes shimmer {
+            to {
+                background-position: -200% 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-bg"></div>
+    <div class="glow"></div>
+
+    <nav>
+        <div class="logo">Atlas</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">🌤 Clima</a>
+            <a href="currency.html" class="nav-link active">💱 Moedas</a>
+            <a href="globe.html" class="nav-link">🌐 Globo</a>
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <h1>Conversor de Moedas</h1>
+        <p class="subtitle">Taxas de câmbio em tempo real para 50+ moedas</p>
+
+        <div class="converter-card">
+            <div class="conv-grid">
+                <div class="conv-field">
+                    <label>De</label>
+                    <div class="conv-row">
+                        <input class="conv-input" type="number" id="convAmount" value="1" min="0" step="any" />
+                        <select class="conv-select" id="convFrom"></select>
+                    </div>
+                </div>
+                <div class="conv-swap-col">
+                    <button class="swap-btn" onclick="swapCurrencies()">⇄</button>
+                </div>
+                <div class="conv-field">
+                    <label>Para</label>
+                    <div class="conv-row">
+                        <input class="conv-input" type="text" id="convResult" readonly placeholder="—" />
+                        <select class="conv-select" id="convTo"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="rate-badge">
+                <span id="rateBadge">Selecione as moedas para ver a taxa</span>
+                <span id="rateUpdated" style="font-size:0.72rem;color:var(--muted)">Tempo real</span>
+            </div>
+        </div>
+
+        <div class="section-title">Taxas populares</div>
+        <div class="rates-grid" id="ratesGrid">
+            ${Array(12).fill('<div class="skeleton" style="height:110px"></div>').join('')}
+        </div>
+
+        <div class="section-title">Todas as moedas</div>
+        <div class="rates-grid" id="allRatesGrid">
+            ${Array(20).fill('<div class="skeleton" style="height:110px"></div>').join('')}
+        </div>
+    </div>
+
+    <script>
+        const EXCHANGE_KEY = '2c3d34684b416f3cae51daa8';
+        const CURRENCIES = [
+            { code: 'USD', name: 'Dólar Americano', flag: '🇺🇸' }, { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+            { code: 'BRL', name: 'Real Brasileiro', flag: '🇧🇷' }, { code: 'GBP', name: 'Libra Esterlina', flag: '🇬🇧' },
+            { code: 'JPY', name: 'Iene Japonês', flag: '🇯🇵' }, { code: 'CAD', name: 'Dólar Canadense', flag: '🇨🇦' },
+            { code: 'AUD', name: 'Dólar Australiano', flag: '🇦🇺' }, { code: 'CHF', name: 'Franco Suíço', flag: '🇨🇭' },
+            { code: 'CNY', name: 'Yuan Chinês', flag: '🇨🇳' }, { code: 'HKD', name: 'Dólar Hong Kong', flag: '🇭🇰' },
+            { code: 'SGD', name: 'Dólar Singapura', flag: '🇸🇬' }, { code: 'NZD', name: 'Dólar Neozelandês', flag: '🇳🇿' },
+            { code: 'SEK', name: 'Coroa Sueca', flag: '🇸🇪' }, { code: 'NOK', name: 'Coroa Norueguesa', flag: '🇳🇴' },
+            { code: 'DKK', name: 'Coroa Dinamarquesa', flag: '🇩🇰' }, { code: 'MXN', name: 'Peso Mexicano', flag: '🇲🇽' },
+            { code: 'ARS', name: 'Peso Argentino', flag: '🇦🇷' }, { code: 'CLP', name: 'Peso Chileno', flag: '🇨🇱' },
+            { code: 'COP', name: 'Peso Colombiano', flag: '🇨🇴' }, { code: 'PEN', name: 'Sol Peruano', flag: '🇵🇪' },
+            { code: 'INR', name: 'Rúpia Indiana', flag: '🇮🇳' }, { code: 'KRW', name: 'Won Sul-Coreano', flag: '🇰🇷' },
+            { code: 'TRY', name: 'Lira Turca', flag: '🇹🇷' }, { code: 'RUB', name: 'Rublo Russo', flag: '🇷🇺' },
+            { code: 'ZAR', name: 'Rand Sul-Africano', flag: '🇿🇦' }, { code: 'SAR', name: 'Riyal Saudita', flag: '🇸🇦' },
+            { code: 'AED', name: 'Dirham EAU', flag: '🇦🇪' }, { code: 'PLN', name: 'Zloty Polonês', flag: '🇵🇱' },
+            { code: 'THB', name: 'Baht Tailandês', flag: '🇹🇭' }, { code: 'IDR', name: 'Rúpia Indonésia', flag: '🇮🇩' },
+            { code: 'MYR', name: 'Ringgit Malaio', flag: '🇲🇾' }, { code: 'PHP', name: 'Peso Filipino', flag: '🇵🇭' },
+            { code: 'TWD', name: 'Dólar Taiwan', flag: '🇹🇼' }, { code: 'VND', name: 'Dong Vietnamita', flag: '🇻🇳' },
+            { code: 'NGN', name: 'Naira Nigeriana', flag: '🇳🇬' }, { code: 'EGP', name: 'Libra Egípcia', flag: '🇪🇬' },
+            { code: 'KWD', name: 'Dinar Kuwaitiano', flag: '🇰🇼' }, { code: 'QAR', name: 'Riyal Qatariano', flag: '🇶🇦' },
+            { code: 'ILS', name: 'Shekel Israelense', flag: '🇮🇱' }, { code: 'CZK', name: 'Coroa Checa', flag: '🇨🇿' },
+            { code: 'HUF', name: 'Florim Húngaro', flag: '🇭🇺' }, { code: 'RON', name: 'Leu Romeno', flag: '🇷🇴' },
+            { code: 'UAH', name: 'Hryvnia Ucraniana', flag: '🇺🇦' }, { code: 'PKR', name: 'Rúpia Paquistanesa', flag: '🇵🇰' },
+            { code: 'BDT', name: 'Taka Bengali', flag: '🇧🇩' }, { code: 'MAD', name: 'Dirham Marroquino', flag: '🇲🇦' },
+            { code: 'DZD', name: 'Dinar Argelino', flag: '🇩🇿' }, { code: 'BHD', name: 'Dinar Bahreiniano', flag: '🇧🇭' },
+            { code: 'OMR', name: 'Rial Omanense', flag: '🇴🇲' },
+        ];
+
+        let ratesCache = {}, ratesBase = '';
+
+        async function fetchRates(base) {
+            if (ratesBase === base && Object.keys(ratesCache).length > 0) return ratesCache;
+            const d = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_KEY}/latest/${base}`).then(r => r.json());
+            if (d.result === 'success') { ratesCache = d.conversion_rates; ratesBase = base; }
+            return ratesCache;
+        }
+
+        function getCurr(code) { return CURRENCIES.find(c => c.code === code) || { code, name: code, flag: '🏳️' }; }
+
+        function populateSelects() {
+            const from = document.getElementById('convFrom'), to = document.getElementById('convTo');
+            CURRENCIES.forEach(c => {
+                from.innerHTML += `<option value="${c.code}">${c.flag} ${c.code} — ${c.name}</option>`;
+                to.innerHTML += `<option value="${c.code}">${c.flag} ${c.code} — ${c.name}</option>`;
+            });
+            from.value = 'USD'; to.value = 'BRL';
+        }
+
+        async function doConvert() {
+            const amt = parseFloat(document.getElementById('convAmount').value) || 0;
+            const from = document.getElementById('convFrom').value;
+            const to = document.getElementById('convTo').value;
+            const rates = await fetchRates(from);
+            const rate = rates[to];
+            if (!rate) return;
+            const result = (amt * rate).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            document.getElementById('convResult').value = result;
+            document.getElementById('rateBadge').textContent = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+        }
+
+        async function loadGrids() {
+            const from = document.getElementById('convFrom').value;
+            const rates = await fetchRates(from);
+            const popular = ['USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'MXN', 'KRW', 'INR'].filter(c => c !== from);
+            const all = CURRENCIES.map(c => c.code).filter(c => c !== from);
+            renderGrid('ratesGrid', popular.slice(0, 12), rates, from);
+            renderGrid('allRatesGrid', all, rates, from);
+        }
+
+        function renderGrid(id, codes, rates, base) {
+            document.getElementById(id).innerHTML = codes.map(code => {
+                const c = getCurr(code), val = rates[code];
+                if (!val) return '';
+                const fmt = val >= 100 ? val.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                return `<div class="rate-card" onclick="setTo('${code}')">
+          <div class="rc-flag">${c.flag}</div>
+          <div class="rc-code">${c.code}</div>
+          <div class="rc-name">${c.name}</div>
+          <div class="rc-val">${fmt}</div>
+          <div class="rc-base">por 1 ${base}</div>
+        </div>`;
+            }).join('');
+        }
+
+        function setTo(code) {
+            document.getElementById('convTo').value = code;
+            doConvert();
+        }
+
+        async function swapCurrencies() {
+            const f = document.getElementById('convFrom'), t = document.getElementById('convTo');
+            [f.value, t.value] = [t.value, f.value];
+            ratesCache = {}; ratesBase = '';
+            await doConvert(); await loadGrids();
+        }
+
+        document.getElementById('convAmount').addEventListener('input', doConvert);
+        document.getElementById('convFrom').addEventListener('change', () => { ratesCache = ''; ratesBase = ''; doConvert(); loadGrids(); });
+        document.getElementById('convTo').addEventListener('change', doConvert);
+
+        populateSelects();
+        doConvert();
+        loadGrids();
+    </script>
+</body>
+
+</html>
