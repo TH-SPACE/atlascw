@@ -4,53 +4,34 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- SEO -->
-    <title>Atlas — Mapa Mundial, Previsão do Tempo e Conversor de Moedas</title>
+    <title>Atlas — Clima e Moedas do Mundo</title>
     <meta name="description"
-        content="Explore o mapa mundial interativo Atlas. Clique em qualquer país para ver previsão do tempo em tempo real e converta moedas de todo o mundo com taxas atualizadas." />
-    <meta name="keywords"
-        content="mapa mundial, previsão do tempo, conversor de moedas, clima ao vivo, câmbio, atlas, temperatura hoje" />
-    <meta name="author" content="Atlas" />
+        content="Pesquise qualquer cidade e veja a previsão do tempo em tempo real, além de converter moedas de todo o mundo com taxas atualizadas." />
+    <meta name="keywords" content="previsão do tempo, clima hoje, conversor de moedas, câmbio, temperatura, atlas" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://atlascw.com.br/" />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://atlascw.com.br/" />
-    <meta property="og:title" content="Atlas — Mapa, Tempo e Moedas" />
+    <meta property="og:title" content="Atlas — Clima e Moedas do Mundo" />
     <meta property="og:description"
-        content="Mapa mundial interativo com previsão do tempo e conversor de moedas em tempo real." />
-    <meta property="og:image" content="https://atlascw.com.br/og.png" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Atlas — Mapa, Tempo e Moedas" />
-    <meta name="twitter:description" content="Mapa mundial interativo com clima e conversor de moedas." />
-
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-    <!-- Google Fonts -->
+        content="Previsão do tempo e conversor de moedas em tempo real para qualquer lugar do mundo." />
+    <meta property="og:url" content="https://atlascw.com.br/" />
+    <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
-
     <style>
         :root {
-            --bg: #0a0e1a;
-            --surface: #111827;
-            --surface2: #1a2235;
-            --border: #1e2d45;
+            --bg: #07090f;
+            --card: #0d1117;
+            --card2: #111827;
+            --border: rgba(255, 255, 255, 0.07);
             --accent: #3b82f6;
             --accent2: #60a5fa;
-            --text: #e2e8f0;
+            --text: #f1f5f9;
             --muted: #64748b;
+            --muted2: #94a3b8;
             --success: #22c55e;
-            --warn: #f59e0b;
-            --danger: #ef4444;
-            --panel-w: 360px;
+            --warm: #f59e0b;
         }
 
         *,
@@ -61,423 +42,540 @@
             padding: 0;
         }
 
-        html,
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
             font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* ── MAP ── */
-        #map {
+        /* ── WORLD MAP SVG BACKGROUND ── */
+        .map-bg {
             position: fixed;
             inset: 0;
-            z-index: 1;
-        }
-
-        .leaflet-container {
-            background: #060d1a;
-        }
-
-        /* ── TOP BAR ── */
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 56px;
-            background: rgba(10, 14, 26, 0.88);
-            backdrop-filter: blur(14px);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0 16px;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--accent2);
-            text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
-            white-space: nowrap;
-        }
-
-        .search-wrap {
-            flex: 1;
-            max-width: 400px;
-            position: relative;
-        }
-
-        .search-wrap input {
-            width: 100%;
-            padding: 8px 14px 8px 36px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text);
-            font-size: 0.875rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .search-wrap input:focus {
-            border-color: var(--accent);
-        }
-
-        .search-wrap input::placeholder {
-            color: var(--muted);
-        }
-
-        .search-wrap .ico {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--muted);
-            font-size: 0.9rem;
+            z-index: 0;
+            opacity: 0.04;
             pointer-events: none;
-        }
-
-        .search-results {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            right: 0;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
             overflow: hidden;
-            display: none;
-            z-index: 200;
-        }
-
-        .search-results.open {
-            display: block;
-        }
-
-        .search-result-item {
-            padding: 10px 14px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: background 0.15s;
-        }
-
-        .search-result-item:hover {
-            background: var(--surface2);
-        }
-
-        .topbar-right {
-            display: flex;
-            gap: 8px;
-            margin-left: auto;
-        }
-
-        .tab-btn {
-            padding: 6px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: transparent;
-            color: var(--muted);
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .tab-btn.active,
-        .tab-btn:hover {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-        }
-
-        /* ── SIDE PANEL ── */
-        .panel {
-            position: fixed;
-            top: 56px;
-            right: 0;
-            bottom: 0;
-            width: var(--panel-w);
-            background: rgba(10, 14, 26, 0.95);
-            backdrop-filter: blur(16px);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            z-index: 50;
-            transform: translateX(100%);
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .panel.open {
-            transform: translateX(0);
-        }
-
-        .panel-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
         }
 
-        .panel-title {
-            font-weight: 700;
-            font-size: 0.95rem;
+        .map-bg svg {
+            width: 100%;
+            max-width: 1400px;
+            height: auto;
         }
 
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 6px;
-            transition: color 0.2s;
+        /* ── GRID LINES ── */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
         }
 
-        .close-btn:hover {
-            color: var(--text);
-        }
-
-        .panel-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-        }
-
-        .panel-body::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .panel-body::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .panel-body::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        /* ── WEATHER CARD ── */
-        .weather-hero {
-            background: linear-gradient(135deg, #0f2044 0%, #0a1628 100%);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 20px;
-            margin-bottom: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .weather-hero::before {
-            content: '';
-            position: absolute;
-            top: -40px;
-            right: -40px;
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+        /* ── AMBIENT GLOWS ── */
+        .glow1 {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%);
+            top: -200px;
+            left: -100px;
+            pointer-events: none;
+            z-index: 0;
             border-radius: 50%;
         }
 
-        .w-location {
+        .glow2 {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+            bottom: -100px;
+            right: -100px;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 50%;
+        }
+
+        /* ── LAYOUT ── */
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px 80px;
+        }
+
+        /* ── HEADER ── */
+        header {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+
+        .globe-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 0.75rem;
+            color: var(--muted2);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            padding: 5px 12px;
+            border-radius: 100px;
+            margin-bottom: 24px;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .globe-link:hover {
+            border-color: var(--accent);
+            color: var(--accent2);
+        }
+
+        .logo {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: -3px;
+            background: linear-gradient(135deg, #fff 0%, #93c5fd 60%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: var(--muted2);
+            font-weight: 400;
+            margin-bottom: 40px;
+        }
+
+        /* ── TABS ── */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 6px;
+            max-width: 360px;
+            margin: 0 auto 36px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 9px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
             color: var(--muted);
-            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ── SEARCH ── */
+        .search-section {
+            margin-bottom: 28px;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 14px 18px 14px 46px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .search-input::placeholder {
+            color: var(--muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+
+        .search-btn {
+            padding: 14px 22px;
+            background: var(--accent);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .suggestions {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 60px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            z-index: 100;
+            display: none;
+        }
+
+        .suggestions.open {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 11px 16px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .suggestion-item .si-country {
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        /* ── SECTIONS ── */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* ── WEATHER RESULT ── */
+        .weather-result {
+            animation: fadeUp 0.4s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .w-hero {
+            background: linear-gradient(135deg, #0f1e3a 0%, #0a1220 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .w-hero::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .w-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .w-place-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .w-place-sub {
+            font-size: 0.85rem;
+            color: var(--muted2);
             display: flex;
             align-items: center;
             gap: 4px;
         }
 
-        .w-city {
-            font-size: 1.25rem;
+        .w-datetime {
+            text-align: right;
+        }
+
+        .w-time {
+            font-size: 1.6rem;
             font-weight: 700;
-            margin-bottom: 2px;
+            font-variant-numeric: tabular-nums;
         }
 
-        .w-country {
-            font-size: 0.8rem;
-            color: var(--muted);
-            margin-bottom: 16px;
+        .w-date {
+            font-size: 0.78rem;
+            color: var(--muted2);
         }
 
-        .w-main {
+        .w-middle {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 20px;
+            margin-bottom: 24px;
         }
 
-        .w-icon {
-            font-size: 3rem;
+        .w-emoji {
+            font-size: 5rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 20px rgba(255, 200, 0, 0.3));
+        }
+
+        .w-temp-big {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: -4px;
             line-height: 1;
         }
 
-        .w-temp {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -2px;
-            color: var(--text);
+        .w-feel {
+            font-size: 0.82rem;
+            color: var(--muted2);
+            margin-top: 4px;
         }
 
         .w-desc {
-            font-size: 0.85rem;
-            color: var(--muted);
+            font-size: 1rem;
+            color: var(--muted2);
             text-transform: capitalize;
             margin-top: 2px;
         }
 
-        .w-grid {
+        .w-stats {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
         }
 
-        .w-stat {
+        @media (max-width: 560px) {
+            .w-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .w-emoji {
+                font-size: 3.5rem;
+            }
+
+            .w-temp-big {
+                font-size: 3.5rem;
+            }
+        }
+
+        .w-stat-box {
             background: rgba(255, 255, 255, 0.04);
-            border-radius: 10px;
-            padding: 10px 12px;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
         }
 
-        .w-stat-label {
-            font-size: 0.7rem;
+        .w-stat-ico {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .w-stat-val {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .w-stat-lbl {
+            font-size: 0.68rem;
             color: var(--muted);
-            margin-bottom: 3px;
+            margin-top: 2px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .w-stat-value {
-            font-size: 0.95rem;
-            font-weight: 600;
+        /* forecast row */
+        .forecast-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
-        /* forecast */
-        .forecast-title {
+        @media (max-width: 560px) {
+            .forecast-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .fc-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 10px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .fc-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .fc-day {
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .fc-ico {
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+        }
+
+        .fc-hi {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .fc-lo {
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .fc-desc {
+            font-size: 0.68rem;
+            color: var(--muted);
+            margin-top: 4px;
+            text-transform: capitalize;
+        }
+
+        /* air quality / uv / sun */
+        .extras-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .extras-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .extra-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .extra-title {
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .extra-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .extra-sub {
             font-size: 0.75rem;
+            color: var(--muted2);
+            margin-top: 2px;
+        }
+
+        /* ── CURRENCY SECTION ── */
+        .currency-result {
+            animation: fadeUp 0.4s ease;
+        }
+
+        .conv-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .conv-title {
+            font-size: 0.8rem;
             font-weight: 600;
             color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 16px 0 8px;
-        }
-
-        .forecast-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .forecast-item {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .fc-day {
-            font-size: 0.8rem;
-            font-weight: 500;
-            width: 36px;
-        }
-
-        .fc-icon {
-            font-size: 1.2rem;
-        }
-
-        .fc-desc {
-            flex: 1;
-            font-size: 0.78rem;
-            color: var(--muted);
-            text-transform: capitalize;
-        }
-
-        .fc-temps {
-            font-size: 0.82rem;
-            font-weight: 600;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .fc-lo {
-            color: var(--muted);
-            font-weight: 400;
-        }
-
-        /* currency */
-        .currency-section {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .currency-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-
-        .currency-flag {
-            font-size: 1.4rem;
-        }
-
-        .currency-name {
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .currency-code {
-            font-size: 0.75rem;
-            color: var(--muted);
-        }
-
-        .rate-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 7px 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.82rem;
-        }
-
-        .rate-row:last-child {
-            border-bottom: none;
-        }
-
-        .rate-label {
-            color: var(--muted);
-        }
-
-        .rate-value {
-            font-weight: 600;
-        }
-
-        /* ── CONVERTER ── */
-        .converter {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px;
-        }
-
-        .converter h3 {
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 14px;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -485,19 +583,20 @@
 
         .conv-row {
             display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 10px;
             align-items: center;
+            margin-bottom: 10px;
         }
 
         .conv-input {
             flex: 1;
-            padding: 9px 12px;
-            background: var(--surface);
+            padding: 13px 16px;
+            background: var(--card2);
             border: 1px solid var(--border);
-            border-radius: 9px;
+            border-radius: 12px;
             color: var(--text);
-            font-size: 0.9rem;
+            font-size: 1rem;
+            font-family: inherit;
             outline: none;
             transition: border-color 0.2s;
         }
@@ -507,44 +606,132 @@
         }
 
         .conv-select {
-            padding: 9px 10px;
-            background: var(--surface);
+            padding: 13px 12px;
+            background: var(--card2);
             border: 1px solid var(--border);
-            border-radius: 9px;
+            border-radius: 12px;
             color: var(--text);
-            font-size: 0.85rem;
+            font-size: 0.875rem;
+            font-family: inherit;
             outline: none;
             cursor: pointer;
-            min-width: 80px;
+            min-width: 90px;
         }
 
-        .conv-arrow {
-            text-align: center;
-            color: var(--muted);
-            font-size: 1rem;
-            padding: 4px 0;
-        }
-
-        .conv-result {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 9px;
+        .conv-swap {
+            width: 100%;
             padding: 12px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            color: var(--accent2);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+            margin: 4px 0 16px;
+        }
+
+        .conv-swap:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .conv-result-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.06));
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 14px;
+            padding: 18px;
             text-align: center;
-            font-size: 1.1rem;
+        }
+
+        .conv-result-num {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--accent2);
+        }
+
+        .conv-result-rate {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* rates grid */
+        .rates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        .rate-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.15s;
+        }
+
+        .rate-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .rate-flag {
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+        }
+
+        .rate-code {
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .rate-name {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .rate-value {
+            font-size: 1rem;
             font-weight: 700;
             color: var(--accent2);
-            min-height: 44px;
         }
 
-        /* ── LOADING / EMPTY ── */
+        .rate-base {
+            font-size: 0.68rem;
+            color: var(--muted);
+        }
+
+        /* section title */
+        .section-heading {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-heading::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── LOADING SKELETON ── */
         .skeleton {
-            background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%);
+            background: linear-gradient(90deg, var(--card2) 25%, rgba(255, 255, 255, 0.04) 50%, var(--card2) 75%);
             background-size: 200% 100%;
             animation: shimmer 1.4s infinite;
-            border-radius: 8px;
-            height: 16px;
-            margin-bottom: 8px;
+            border-radius: 10px;
         }
 
         @keyframes shimmer {
@@ -553,257 +740,318 @@
             }
         }
 
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 40px 20px;
+        /* ── EMPTY / INITIAL ── */
+        .initial-state {
             text-align: center;
+            padding: 40px 20px;
             color: var(--muted);
         }
 
-        .empty-state .ico {
-            font-size: 2.5rem;
-            margin-bottom: 12px;
+        .initial-state .big-ico {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.4;
         }
 
-        .empty-state p {
-            font-size: 0.875rem;
+        .initial-state p {
+            font-size: 0.9rem;
             line-height: 1.6;
         }
 
-        /* ── CONVERTER STANDALONE ── */
-        .converter-panel {
-            position: fixed;
-            top: 56px;
-            right: 0;
-            bottom: 0;
-            width: var(--panel-w);
-            background: rgba(10, 14, 26, 0.95);
-            backdrop-filter: blur(16px);
-            border-left: 1px solid var(--border);
-            z-index: 50;
-            transform: translateX(100%);
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        /* ── ERROR ── */
+        .error-box {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 14px;
+            padding: 16px 20px;
+            font-size: 0.875rem;
+            color: #fca5a5;
             display: flex;
-            flex-direction: column;
+            gap: 10px;
+            align-items: center;
         }
 
-        .converter-panel.open {
-            transform: translateX(0);
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            padding: 32px 20px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            position: relative;
+            z-index: 1;
         }
 
-        /* ── MAP CLICK PULSE ── */
-        .pulse-marker {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: rgba(59, 130, 246, 0.8);
-            border: 2px solid #fff;
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
-            animation: pulse 1.5s ease-out infinite;
+        footer a {
+            color: var(--muted2);
+            text-decoration: none;
         }
 
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
-            }
-
-            70% {
-                box-shadow: 0 0 0 14px rgba(59, 130, 246, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-            }
-        }
-
-        /* ── TOAST ── */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%) translateY(80px);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            transition: transform 0.3s;
-            z-index: 999;
-        }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* ── MOBILE ── */
-        @media (max-width: 600px) {
-            :root {
-                --panel-w: 100vw;
-            }
-
-            .logo {
-                font-size: 1.1rem;
-            }
-
-            .tab-btn span {
-                display: none;
-            }
+        footer a:hover {
+            color: var(--accent2);
         }
     </style>
 </head>
 
 <body>
 
-    <!-- MAP -->
-    <div id="map"></div>
-
-    <!-- TOP BAR -->
-    <div class="topbar">
-        <div class="logo">🌍 Atlas</div>
-
-        <div class="search-wrap">
-            <span class="ico">🔍</span>
-            <input id="searchInput" type="text" placeholder="Buscar cidade ou país..." autocomplete="off" />
-            <div class="search-results" id="searchResults"></div>
-        </div>
-
-        <div class="topbar-right">
-            <button class="tab-btn" id="btnWeather" onclick="openWeatherPanel()">🌤 <span>Tempo</span></button>
-            <button class="tab-btn" id="btnConverter" onclick="toggleConverter()">💱 <span>Moedas</span></button>
-        </div>
+    <!-- Backgrounds -->
+    <div class="glow1"></div>
+    <div class="glow2"></div>
+    <div class="grid-bg"></div>
+    <div class="map-bg">
+        <!-- World map SVG outline (simplified) -->
+        <svg viewBox="0 0 2000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Americas -->
+            <path
+                d="M280 180 L240 220 L210 280 L195 350 L200 420 L220 480 L215 540 L230 600 L250 650 L260 700 L245 750 L255 800 L280 830 L300 820 L310 780 L300 740 L310 700 L330 670 L340 640 L330 590 L320 550 L335 500 L350 460 L360 420 L355 370 L340 320 L345 270 L360 230 L370 200 L360 170 L330 155 L300 160 Z"
+                fill="white" opacity="0.6" />
+            <path
+                d="M370 130 L340 110 L320 80 L330 50 L360 40 L390 45 L420 55 L440 80 L445 110 L435 140 L415 155 L390 150 Z"
+                fill="white" opacity="0.6" />
+            <path d="M440 200 L420 220 L405 260 L410 300 L430 320 L455 310 L470 280 L465 240 L450 215 Z" fill="white"
+                opacity="0.5" />
+            <!-- North America main -->
+            <path
+                d="M180 100 L160 130 L150 170 L155 210 L170 240 L190 250 L220 240 L240 210 L245 170 L235 130 L215 105 L195 95 Z"
+                fill="white" opacity="0.5" />
+            <!-- Europe -->
+            <path d="M940 120 L920 140 L910 170 L925 195 L945 200 L970 190 L985 165 L975 140 L955 125 Z" fill="white"
+                opacity="0.6" />
+            <path d="M960 200 L940 215 L935 240 L950 260 L975 255 L990 235 L985 210 Z" fill="white" opacity="0.5" />
+            <path d="M1000 150 L980 160 L975 185 L990 205 L1015 200 L1025 175 L1010 155 Z" fill="white" opacity="0.5" />
+            <path d="M1020 120 L1000 135 L995 155 L1010 170 L1035 165 L1045 145 L1030 125 Z" fill="white"
+                opacity="0.5" />
+            <path d="M900 150 L870 155 L855 175 L860 200 L880 215 L905 210 L920 190 L915 165 Z" fill="white"
+                opacity="0.5" />
+            <path d="M870 100 L845 110 L835 135 L845 155 L865 160 L885 148 L890 125 L875 108 Z" fill="white"
+                opacity="0.5" />
+            <!-- Scandinavia -->
+            <path d="M965 60 L950 75 L948 100 L960 115 L975 110 L980 88 L972 70 Z" fill="white" opacity="0.5" />
+            <path d="M985 50 L970 62 L968 85 L982 98 L997 92 L1000 68 L990 55 Z" fill="white" opacity="0.5" />
+            <!-- UK -->
+            <path d="M880 130 L865 140 L860 160 L870 175 L885 170 L895 155 L890 138 Z" fill="white" opacity="0.5" />
+            <!-- Africa -->
+            <path
+                d="M960 270 L935 280 L920 310 L915 360 L920 420 L935 480 L955 540 L975 590 L990 630 L995 670 L985 700 L975 720 L985 740 L1005 750 L1025 740 L1030 710 L1020 670 L1025 630 L1040 590 L1050 540 L1055 490 L1050 440 L1040 390 L1040 340 L1030 300 L1010 275 L985 265 Z"
+                fill="white" opacity="0.5" />
+            <path d="M960 270 L940 260 L920 265 L905 280 L900 300 L910 320 L930 325 L950 315 L960 295 Z" fill="white"
+                opacity="0.4" />
+            <!-- Asia -->
+            <path d="M1060 100 L1040 110 L1030 135 L1040 160 L1065 170 L1090 160 L1100 135 L1085 110 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1100 80 L1070 90 L1060 115 L1075 140 L1105 145 L1125 130 L1125 100 L1110 82 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1130 100 L1105 110 L1100 135 L1115 155 L1145 155 L1160 138 L1155 112 L1140 100 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1160 120 L1140 130 L1138 155 L1155 175 L1180 172 L1190 150 L1180 128 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1200 150 L1175 158 L1170 180 L1185 200 L1210 198 L1225 178 L1215 155 Z" fill="white"
+                opacity="0.5" />
+            <!-- India -->
+            <path
+                d="M1150 230 L1130 240 L1120 270 L1125 310 L1140 345 L1160 360 L1180 355 L1195 325 L1195 280 L1185 248 L1168 232 Z"
+                fill="white" opacity="0.5" />
+            <!-- China/SE Asia -->
+            <path d="M1220 160 L1195 170 L1185 195 L1195 225 L1225 235 L1255 225 L1265 195 L1250 168 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1265 180 L1245 188 L1240 210 L1255 230 L1280 228 L1290 205 L1278 183 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1290 200 L1270 208 L1268 235 L1285 255 L1310 250 L1320 228 L1305 205 Z" fill="white"
+                opacity="0.5" />
+            <!-- Japan -->
+            <path d="M1360 140 L1345 150 L1342 172 L1355 185 L1372 180 L1378 160 L1368 143 Z" fill="white"
+                opacity="0.5" />
+            <!-- Australia -->
+            <path
+                d="M1360 560 L1325 558 L1295 570 L1275 595 L1270 635 L1280 680 L1305 715 L1340 730 L1375 720 L1400 690 L1410 645 L1400 600 L1380 570 Z"
+                fill="white" opacity="0.5" />
+            <!-- Russia -->
+            <path d="M1020 80 L1000 75 L975 72 L950 78 L940 95 L950 112 L975 118 L1005 112 L1025 98 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1080 65 L1045 70 L1030 85 L1040 105 L1070 110 L1100 100 L1105 78 L1090 65 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1140 55 L1105 60 L1095 78 L1108 98 L1140 102 L1165 90 L1162 65 L1148 55 Z" fill="white"
+                opacity="0.5" />
+            <path d="M1200 50 L1165 55 L1158 75 L1175 95 L1208 97 L1228 82 L1222 58 Z" fill="white" opacity="0.5" />
+            <path d="M1260 45 L1222 50 L1218 72 L1238 92 L1270 92 L1288 75 L1278 50 Z" fill="white" opacity="0.5" />
+            <path d="M1330 42 L1288 46 L1285 70 L1308 90 L1342 88 L1358 68 L1345 45 Z" fill="white" opacity="0.5" />
+            <path d="M1400 45 L1355 48 L1352 72 L1378 90 L1412 88 L1425 68 L1410 47 Z" fill="white" opacity="0.5" />
+            <!-- South America -->
+            <path
+                d="M450 360 L425 370 L410 400 L415 440 L430 480 L445 520 L450 560 L440 600 L430 640 L435 680 L455 710 L480 720 L505 710 L515 675 L505 635 L495 595 L495 555 L505 515 L510 475 L500 430 L490 390 L475 365 Z"
+                fill="white" opacity="0.55" />
+            <path d="M500 365 L480 358 L460 360 L450 375 L460 395 L480 400 L505 390 L512 372 Z" fill="white"
+                opacity="0.4" />
+            <!-- Greenland -->
+            <path d="M700 30 L660 40 L640 65 L645 100 L665 120 L700 128 L730 115 L745 85 L738 55 L718 35 Z" fill="white"
+                opacity="0.4" />
+            <!-- Middle East -->
+            <path d="M1060 240 L1040 248 L1035 270 L1048 288 L1072 285 L1082 262 L1070 243 Z" fill="white"
+                opacity="0.4" />
+            <path d="M1085 225 L1065 232 L1060 255 L1075 272 L1100 268 L1110 248 L1098 227 Z" fill="white"
+                opacity="0.4" />
+            <!-- Madagascar -->
+            <path d="M1085 520 L1072 530 L1068 555 L1075 580 L1092 590 L1105 578 L1108 550 L1098 527 Z" fill="white"
+                opacity="0.4" />
+        </svg>
     </div>
 
-    <!-- WEATHER PANEL -->
-    <div class="panel" id="weatherPanel">
-        <div class="panel-header">
-            <span class="panel-title" id="panelTitle">Previsão do Tempo</span>
-            <button class="close-btn" onclick="closePanel()">✕</button>
-        </div>
-        <div class="panel-body" id="panelBody">
-            <div class="empty-state">
-                <div class="ico">🗺️</div>
-                <p>Clique em qualquer ponto do mapa para ver a previsão do tempo e informações de moeda local.</p>
+    <div class="wrapper">
+        <!-- HEADER -->
+        <header>
+            <a href="globe.html" class="globe-link">🌐 Ver globo 3D →</a>
+            <div class="logo">Atlas</div>
+            <p class="tagline">Clima e moedas do mundo em tempo real</p>
+
+            <!-- TABS -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('weather')">🌤 Clima</button>
+                <button class="tab" onclick="switchTab('currency')">💱 Moedas</button>
             </div>
-        </div>
-    </div>
+        </header>
 
-    <!-- CONVERTER PANEL -->
-    <div class="converter-panel" id="converterPanel">
-        <div class="panel-header">
-            <span class="panel-title">💱 Conversor de Moedas</span>
-            <button class="close-btn" onclick="closeConverter()">✕</button>
+        <!-- ── WEATHER TAB ── -->
+        <div class="section active" id="tab-weather">
+
+            <div class="search-section">
+                <div class="search-box" style="position:relative">
+                    <span class="search-icon">🔍</span>
+                    <input id="weatherSearch" class="search-input" type="text"
+                        placeholder="Digite uma cidade... ex: São Paulo, Tokyo, New York" autocomplete="off" />
+                    <button class="search-btn" onclick="searchWeather()">Buscar</button>
+                    <div class="suggestions" id="weatherSuggestions"></div>
+                </div>
+            </div>
+
+            <div id="weatherResult">
+                <div class="initial-state">
+                    <div class="big-ico">🌍</div>
+                    <p>Digite o nome de qualquer cidade do mundo<br>para ver a previsão do tempo completa.</p>
+                </div>
+            </div>
+
         </div>
-        <div class="panel-body">
-            <div class="converter" style="background:transparent;border:none;padding:0">
-                <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px">Taxas atualizadas em tempo real</p>
+
+        <!-- ── CURRENCY TAB ── -->
+        <div class="section" id="tab-currency">
+
+            <div class="conv-card">
+                <div class="conv-title">💱 Conversor de Moedas</div>
 
                 <div class="conv-row">
-                    <input class="conv-input" type="number" id="convAmount" value="1" min="0" step="any" />
+                    <input class="conv-input" type="number" id="convAmount" value="1" min="0" step="any"
+                        placeholder="Valor" />
                     <select class="conv-select" id="convFrom"></select>
                 </div>
 
-                <div class="conv-arrow">⬇️</div>
+                <button class="conv-swap" onclick="swapCurrencies()">⇅ Inverter moedas</button>
 
-                <div class="conv-row" style="margin-top:10px">
-                    <select class="conv-select" id="convTo" style="flex:1"></select>
+                <div class="conv-row">
+                    <input class="conv-input" id="convResultInput" readonly placeholder="Resultado..." />
+                    <select class="conv-select" id="convTo"></select>
                 </div>
 
-                <div class="conv-result" id="convResult" style="margin-top:12px">—</div>
-
-                <button onclick="swapCurrencies()" style="
-        width:100%; margin-top:10px; padding:10px;
-        background:var(--surface); border:1px solid var(--border);
-        border-radius:9px; color:var(--text); cursor:pointer; font-size:0.85rem;
-        transition:background 0.2s;
-      ">🔄 Inverter moedas</button>
-
-                <div id="popularRates" style="margin-top:20px"></div>
+                <div class="conv-result-box" id="convResultBox" style="margin-top:16px">
+                    <div class="conv-result-num" id="convResultNum">—</div>
+                    <div class="conv-result-rate" id="convResultRate">Selecione as moedas</div>
+                </div>
             </div>
+
+            <div class="section-heading">Taxas populares</div>
+            <div class="rates-grid" id="ratesGrid">
+                <!-- filled by JS -->
+                <div class="skeleton" style="height:100px"></div>
+                <div class="skeleton" style="height:100px"></div>
+                <div class="skeleton" style="height:100px"></div>
+                <div class="skeleton" style="height:100px"></div>
+                <div class="skeleton" style="height:100px"></div>
+                <div class="skeleton" style="height:100px"></div>
+            </div>
+
         </div>
+
     </div>
 
-    <!-- TOAST -->
-    <div class="toast" id="toast"></div>
+    <footer>
+        <p>© 2026 Atlas &nbsp;·&nbsp; <a href="globe.html">Globo 3D</a> &nbsp;·&nbsp; Dados: OpenWeatherMap &
+            ExchangeRate-API</p>
+    </footer>
 
-    <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- AdSense (ativar após aprovação) -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"WebApplication",
+  "name":"Atlas",
+  "url":"https://atlascw.com.br",
+  "description":"Previsão do tempo e conversor de moedas em tempo real para qualquer lugar do mundo.",
+  "applicationCategory":"UtilityApplication",
+  "operatingSystem":"Web",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"BRL"}
+}
+</script>
+
     <script>
-        /* ═══════════════════════════════════════════════════════════
-           KEYS
-        ═══════════════════════════════════════════════════════════ */
+        /* ═══════════════════════════════ KEYS ═══════════════════════════════ */
         const OWM_KEY = 'f4549c9b4d1799e4b5a4ac45c876c951';
         const EXCHANGE_KEY = '2c3d34684b416f3cae51daa8';
 
-        /* ═══════════════════════════════════════════════════════════
-           MAP SETUP
-        ═══════════════════════════════════════════════════════════ */
-        const map = L.map('map', {
-            center: [20, 10],
-            zoom: 3,
-            zoomControl: false,
-            attributionControl: true,
-        });
+        /* ═══════════════════════════════ DATA ═══════════════════════════════ */
+        const CURRENCIES = [
+            { code: 'USD', name: 'Dólar Americano', flag: '🇺🇸' },
+            { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+            { code: 'BRL', name: 'Real Brasileiro', flag: '🇧🇷' },
+            { code: 'GBP', name: 'Libra Esterlina', flag: '🇬🇧' },
+            { code: 'JPY', name: 'Iene Japonês', flag: '🇯🇵' },
+            { code: 'CAD', name: 'Dólar Canadense', flag: '🇨🇦' },
+            { code: 'AUD', name: 'Dólar Australiano', flag: '🇦🇺' },
+            { code: 'CHF', name: 'Franco Suíço', flag: '🇨🇭' },
+            { code: 'CNY', name: 'Yuan Chinês', flag: '🇨🇳' },
+            { code: 'HKD', name: 'Dólar Hong Kong', flag: '🇭🇰' },
+            { code: 'SGD', name: 'Dólar Singapura', flag: '🇸🇬' },
+            { code: 'NZD', name: 'Dólar Neozelandês', flag: '🇳🇿' },
+            { code: 'SEK', name: 'Coroa Sueca', flag: '🇸🇪' },
+            { code: 'NOK', name: 'Coroa Norueguesa', flag: '🇳🇴' },
+            { code: 'DKK', name: 'Coroa Dinamarquesa', flag: '🇩🇰' },
+            { code: 'MXN', name: 'Peso Mexicano', flag: '🇲🇽' },
+            { code: 'ARS', name: 'Peso Argentino', flag: '🇦🇷' },
+            { code: 'CLP', name: 'Peso Chileno', flag: '🇨🇱' },
+            { code: 'COP', name: 'Peso Colombiano', flag: '🇨🇴' },
+            { code: 'PEN', name: 'Sol Peruano', flag: '🇵🇪' },
+            { code: 'INR', name: 'Rúpia Indiana', flag: '🇮🇳' },
+            { code: 'KRW', name: 'Won Sul-Coreano', flag: '🇰🇷' },
+            { code: 'TRY', name: 'Lira Turca', flag: '🇹🇷' },
+            { code: 'RUB', name: 'Rublo Russo', flag: '🇷🇺' },
+            { code: 'ZAR', name: 'Rand Sul-Africano', flag: '🇿🇦' },
+            { code: 'SAR', name: 'Riyal Saudita', flag: '🇸🇦' },
+            { code: 'AED', name: 'Dirham EAU', flag: '🇦🇪' },
+            { code: 'PLN', name: 'Zloty Polonês', flag: '🇵🇱' },
+            { code: 'THB', name: 'Baht Tailandês', flag: '🇹🇭' },
+            { code: 'IDR', name: 'Rúpia Indonésia', flag: '🇮🇩' },
+            { code: 'MYR', name: 'Ringgit Malaio', flag: '🇲🇾' },
+            { code: 'PHP', name: 'Peso Filipino', flag: '🇵🇭' },
+            { code: 'TWD', name: 'Dólar Taiwan', flag: '🇹🇼' },
+            { code: 'VND', name: 'Dong Vietnamita', flag: '🇻🇳' },
+            { code: 'NGN', name: 'Naira Nigeriana', flag: '🇳🇬' },
+            { code: 'EGP', name: 'Libra Egípcia', flag: '🇪🇬' },
+            { code: 'KWD', name: 'Dinar Kuwaitiano', flag: '🇰🇼' },
+            { code: 'QAR', name: 'Riyal Qatariano', flag: '🇶🇦' },
+            { code: 'ILS', name: 'Shekel Israelense', flag: '🇮🇱' },
+            { code: 'CZK', name: 'Coroa Checa', flag: '🇨🇿' },
+            { code: 'HUF', name: 'Florim Húngaro', flag: '🇭🇺' },
+            { code: 'RON', name: 'Leu Romeno', flag: '🇷🇴' },
+            { code: 'UAH', name: 'Hryvnia Ucraniana', flag: '🇺🇦' },
+            { code: 'PKR', name: 'Rúpia Paquistanesa', flag: '🇵🇰' },
+            { code: 'BDT', name: 'Taka Bengali', flag: '🇧🇩' },
+            { code: 'MAD', name: 'Dirham Marroquino', flag: '🇲🇦' },
+            { code: 'PEN', name: 'Sol Peruano', flag: '🇵🇪' },
+        ];
 
-        // Dark map tiles
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 19,
-        }).addTo(map);
-
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-        /* ═══════════════════════════════════════════════════════════
-           CURRENCIES per country code
-        ═══════════════════════════════════════════════════════════ */
-        const COUNTRY_CURRENCY = {
-            BR: 'BRL', US: 'USD', GB: 'GBP', EU: 'EUR', DE: 'EUR', FR: 'EUR', IT: 'EUR',
-            ES: 'EUR', PT: 'EUR', JP: 'JPY', CN: 'CNY', IN: 'INR', MX: 'MXN', CA: 'CAD',
-            AU: 'AUD', RU: 'RUB', ZA: 'ZAR', KR: 'KRW', AR: 'ARS', CL: 'CLP', CO: 'COP',
-            PE: 'PEN', NG: 'NGN', EG: 'EGP', SA: 'SAR', AE: 'AED', TR: 'TRY', TH: 'THB',
-            ID: 'IDR', MY: 'MYR', SG: 'SGD', PH: 'PHP', PK: 'PKR', BD: 'BDT', VN: 'VND',
-            HK: 'HKD', TW: 'TWD', NZ: 'NZD', NO: 'NOK', SE: 'SEK', DK: 'DKK', CH: 'CHF',
-            PL: 'PLN', CZ: 'CZK', HU: 'HUF', RO: 'RON', UA: 'UAH', IL: 'ILS', BO: 'BOB',
-            EC: 'USD', VE: 'VES', UY: 'UYU', PY: 'PYG', GT: 'GTQ', HN: 'HNL', CR: 'CRC',
-            PA: 'PAB', CU: 'CUP', DO: 'DOP', JM: 'JMD', MA: 'MAD', DZ: 'DZD', TN: 'TND',
-            GH: 'GHS', KE: 'KES', ET: 'ETB', TZ: 'TZS', UG: 'UGX', CM: 'XAF', CI: 'XOF',
-            SN: 'XOF', MZ: 'MZN', AO: 'AOA', ZW: 'ZWL', IQ: 'IQD', IR: 'IRR', KW: 'KWD',
-            QA: 'QAR', BH: 'BHD', OM: 'OMR', JO: 'JOD', LB: 'LBP', SY: 'SYP', YE: 'YER',
-            AF: 'AFN', NP: 'NPR', LK: 'LKR', MM: 'MMK', KH: 'KHR', LA: 'LAK', KZ: 'KZT',
-            UZ: 'UZS', TM: 'TMT', GE: 'GEL', AM: 'AMD', AZ: 'AZN', BY: 'BYN', MD: 'MDL',
-            RS: 'RSD', HR: 'HRK', BG: 'BGN', GR: 'EUR', SK: 'EUR', SI: 'EUR', EE: 'EUR',
-            LV: 'EUR', LT: 'EUR', FI: 'EUR', AT: 'EUR', BE: 'EUR', NL: 'EUR', LU: 'EUR',
-            IE: 'EUR', CY: 'EUR', MT: 'EUR',
-        };
-
-        const CURRENCY_NAMES = {
-            BRL: 'Real Brasileiro', USD: 'Dólar Americano', EUR: 'Euro', GBP: 'Libra Esterlina',
-            JPY: 'Iene Japonês', CNY: 'Yuan Chinês', INR: 'Rúpia Indiana', CAD: 'Dólar Canadense',
-            AUD: 'Dólar Australiano', CHF: 'Franco Suíço', MXN: 'Peso Mexicano', RUB: 'Rublo Russo',
-            ZAR: 'Rand Sul-Africano', KRW: 'Won Sul-Coreano', ARS: 'Peso Argentino', CLP: 'Peso Chileno',
-            COP: 'Peso Colombiano', PEN: 'Sol Peruano', TRY: 'Lira Turca', SAR: 'Riyal Saudita',
-            AED: 'Dirham Emirados', SGD: 'Dólar Singapura', HKD: 'Dólar Hong Kong', NZD: 'Dólar Neozelandês',
-            NOK: 'Coroa Norueguesa', SEK: 'Coroa Sueca', DKK: 'Coroa Dinamarquesa', PLN: 'Zloty Polonês',
-            ILS: 'Shekel Israelense', THB: 'Baht Tailandês', IDR: 'Rúpia Indonésia', MYR: 'Ringgit Malaio',
-            PHP: 'Peso Filipino', TWD: 'Dólar Taiwan', VND: 'Dong Vietnamita', NGN: 'Naira Nigeriana',
-        };
-
-        const CURRENCY_FLAGS = {
-            BRL: '🇧🇷', USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵', CNY: '🇨🇳', INR: '🇮🇳',
-            CAD: '🇨🇦', AUD: '🇦🇺', CHF: '🇨🇭', MXN: '🇲🇽', RUB: '🇷🇺', ZAR: '🇿🇦', KRW: '🇰🇷',
-            ARS: '🇦🇷', CLP: '🇨🇱', COP: '🇨🇴', TRY: '🇹🇷', SAR: '🇸🇦', AED: '🇦🇪', SGD: '🇸🇬',
-            HKD: '🇭🇰', NZD: '🇳🇿', NOK: '🇳🇴', SEK: '🇸🇪', DKK: '🇩🇰', PLN: '🇵🇱', THB: '🇹🇭',
-            IDR: '🇮🇩', MYR: '🇲🇾', PHP: '🇵🇭', VND: '🇻🇳', NGN: '🇳🇬', ILS: '🇮🇱', TWD: '🇹🇼',
-        };
-
-        /* ═══════════════════════════════════════════════════════════
-           WEATHER ICONS (OWM id ranges)
-        ═══════════════════════════════════════════════════════════ */
-        function weatherIcon(id, pod) {
+        /* ═══════════════════════════════ HELPERS ═══════════════════════════ */
+        function weatherIcon(id, pod = 'd') {
             const n = pod === 'n';
             if (id >= 200 && id < 300) return '⛈️';
             if (id >= 300 && id < 400) return '🌦️';
@@ -819,163 +1067,145 @@
             return '🌡️';
         }
 
+        function windDir(deg) {
+            const d = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'O', 'NO'];
+            return d[Math.round((deg || 0) / 45) % 8];
+        }
+
         function fmtTemp(t) { return `${Math.round(t)}°C`; }
 
-        function windDir(deg) {
-            const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-            return dirs[Math.round(deg / 45) % 8];
+        function getCurrencyByCode(code) {
+            return CURRENCIES.find(c => c.code === code) || { code, name: code, flag: '🏳️' };
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           REVERSE GEOCODE  (nominatim)
-        ═══════════════════════════════════════════════════════════ */
-        async function reverseGeocode(lat, lon) {
-            const r = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-                { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8' } }
-            );
-            return r.json();
+        /* ═══════════════════════════════ TABS ══════════════════════════════ */
+        let activeTab = 'weather';
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.tab').forEach((b, i) => {
+                b.classList.toggle('active', (i === 0 && tab === 'weather') || (i === 1 && tab === 'currency'));
+            });
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (tab === 'currency' && !convInitialized) initConverter();
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           WEATHER FETCH
-        ═══════════════════════════════════════════════════════════ */
-        async function fetchWeather(lat, lon) {
-            const [cur, fore] = await Promise.all([
-                fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=pt_br&appid=${OWM_KEY}`).then(r => r.json()),
-                fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=pt_br&cnt=40&appid=${OWM_KEY}`).then(r => r.json()),
-            ]);
-            return { cur, fore };
-        }
+        /* ═══════════════════════════════ WEATHER ════════════════════════════ */
+        let weatherTimeout;
 
-        /* ═══════════════════════════════════════════════════════════
-           EXCHANGE RATES
-        ═══════════════════════════════════════════════════════════ */
-        let ratesCache = {};
-        let ratesBase = '';
+        const weatherInput = document.getElementById('weatherSearch');
+        const suggestionsEl = document.getElementById('weatherSuggestions');
 
-        async function fetchRates(base = 'USD') {
-            if (ratesBase === base && Object.keys(ratesCache).length > 0) return ratesCache;
-            const r = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_KEY}/latest/${base}`);
-            const d = await r.json();
-            if (d.result === 'success') {
-                ratesCache = d.conversion_rates;
-                ratesBase = base;
-            }
-            return ratesCache;
-        }
-
-        /* ═══════════════════════════════════════════════════════════
-           PANEL STATE
-        ═══════════════════════════════════════════════════════════ */
-        let currentMarker = null;
-        let currentCurrency = 'USD';
-
-        function openWeatherPanel() {
-            document.getElementById('weatherPanel').classList.add('open');
-            document.getElementById('converterPanel').classList.remove('open');
-            document.getElementById('btnWeather').classList.add('active');
-            document.getElementById('btnConverter').classList.remove('active');
-        }
-
-        function closePanel() {
-            document.getElementById('weatherPanel').classList.remove('open');
-            document.getElementById('btnWeather').classList.remove('active');
-        }
-
-        function toggleConverter() {
-            const p = document.getElementById('converterPanel');
-            const open = p.classList.contains('open');
-            if (open) {
-                closeConverter();
-            } else {
-                p.classList.add('open');
-                document.getElementById('weatherPanel').classList.remove('open');
-                document.getElementById('btnConverter').classList.add('active');
-                document.getElementById('btnWeather').classList.remove('active');
-                initConverter();
-            }
-        }
-
-        function closeConverter() {
-            document.getElementById('converterPanel').classList.remove('open');
-            document.getElementById('btnConverter').classList.remove('active');
-        }
-
-        /* ═══════════════════════════════════════════════════════════
-           MAP CLICK
-        ═══════════════════════════════════════════════════════════ */
-        map.on('click', async (e) => {
-            const { lat, lng } = e.latlng;
-
-            // Remove old marker
-            if (currentMarker) map.removeLayer(currentMarker);
-
-            // Pulse marker
-            const icon = L.divIcon({ className: '', html: '<div class="pulse-marker"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
-            currentMarker = L.marker([lat, lng], { icon }).addTo(map);
-
-            openWeatherPanel();
-            showLoading();
-
-            try {
-                const [geo, { cur, fore }] = await Promise.all([
-                    reverseGeocode(lat, lng),
-                    fetchWeather(lat, lng),
-                ]);
-
-                const countryCode = geo?.address?.country_code?.toUpperCase() || '';
-                const currency = COUNTRY_CURRENCY[countryCode] || 'USD';
-                currentCurrency = currency;
-
-                let rates = {};
-                try { rates = await fetchRates(currency); } catch (e) { }
-
-                renderWeatherPanel(cur, fore, geo, currency, rates);
-
-            } catch (err) {
-                document.getElementById('panelBody').innerHTML = `
-        <div class="empty-state">
-          <div class="ico">⚠️</div>
-          <p>Não foi possível carregar os dados. Verifique sua conexão e tente novamente.</p>
-        </div>`;
-            }
+        weatherInput.addEventListener('input', () => {
+            clearTimeout(weatherTimeout);
+            const q = weatherInput.value.trim();
+            if (q.length < 2) { suggestionsEl.classList.remove('open'); return; }
+            weatherTimeout = setTimeout(() => fetchSuggestions(q), 300);
         });
 
-        /* ═══════════════════════════════════════════════════════════
-           SHOW LOADING
-        ═══════════════════════════════════════════════════════════ */
-        function showLoading() {
-            document.getElementById('panelBody').innerHTML = `
-      <div style="padding:8px 0">
-        <div class="skeleton" style="height:180px;margin-bottom:12px"></div>
-        <div class="skeleton" style="width:60%"></div>
-        <div class="skeleton" style="width:80%"></div>
-        <div class="skeleton" style="width:50%"></div>
-        <div class="skeleton" style="height:120px;margin-top:16px"></div>
-      </div>`;
+        weatherInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') searchWeather();
+            if (e.key === 'Escape') suggestionsEl.classList.remove('open');
+        });
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.search-box')) suggestionsEl.classList.remove('open');
+        });
+
+        async function fetchSuggestions(q) {
+            try {
+                const r = await fetch(
+                    `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=6&appid=${OWM_KEY}`
+                );
+                const data = await r.json();
+                if (!data.length) { suggestionsEl.classList.remove('open'); return; }
+                suggestionsEl.innerHTML = data.map((c, i) =>
+                    `<div class="suggestion-item" data-i="${i}">
+        <span>🔍</span>
+        <div>
+          <div>${c.name}${c.state ? ', ' + c.state : ''}</div>
+          <span class="si-country">${c.country}</span>
+        </div>
+      </div>`
+                ).join('');
+                suggestionsEl.classList.add('open');
+                suggestionsEl.querySelectorAll('.suggestion-item').forEach((el, i) => {
+                    el.addEventListener('click', () => {
+                        weatherInput.value = data[i].name + (data[i].state ? ', ' + data[i].state : '') + ', ' + data[i].country;
+                        suggestionsEl.classList.remove('open');
+                        loadWeather(data[i].lat, data[i].lon, data[i].name, data[i].country);
+                    });
+                });
+            } catch { }
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           RENDER WEATHER
-        ═══════════════════════════════════════════════════════════ */
-        function renderWeatherPanel(cur, fore, geo, currency, rates) {
-            const city = cur.name || geo?.address?.city || geo?.address?.town || geo?.address?.county || '—';
-            const country = cur.sys?.country || geo?.address?.country || '';
-            const icon = weatherIcon(cur.weather[0].id, cur.weather[0].icon.slice(-1));
-            const desc = cur.weather[0].description;
-            const temp = fmtTemp(cur.main.temp);
-            const feels = fmtTemp(cur.main.feels_like);
-            const humid = cur.main.humidity;
-            const wind = `${Math.round(cur.wind.speed * 3.6)} km/h ${windDir(cur.wind.deg || 0)}`;
-            const vis = cur.visibility ? `${(cur.visibility / 1000).toFixed(1)} km` : '—';
-            const pressure = `${cur.main.pressure} hPa`;
+        async function searchWeather() {
+            const q = weatherInput.value.trim();
+            if (!q) return;
+            suggestionsEl.classList.remove('open');
+            showWeatherLoading();
+            try {
+                const geo = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=1&appid=${OWM_KEY}`).then(r => r.json());
+                if (!geo.length) { showWeatherError('Cidade não encontrada. Tente outro nome.'); return; }
+                await loadWeather(geo[0].lat, geo[0].lon, geo[0].name, geo[0].country);
+            } catch {
+                showWeatherError('Erro ao buscar dados. Verifique sua conexão.');
+            }
+        }
 
-            // daily forecast from 3h data
+        async function loadWeather(lat, lon, city, country) {
+            showWeatherLoading();
+            try {
+                const [cur, fore] = await Promise.all([
+                    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=pt_br&appid=${OWM_KEY}`).then(r => r.json()),
+                    fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=pt_br&cnt=40&appid=${OWM_KEY}`).then(r => r.json()),
+                ]);
+                renderWeather(cur, fore, city || cur.name, country || cur.sys?.country);
+            } catch {
+                showWeatherError('Não foi possível carregar os dados do clima.');
+            }
+        }
+
+        function showWeatherLoading() {
+            document.getElementById('weatherResult').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="skeleton" style="height:260px;border-radius:20px"></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+        ${Array(5).fill('<div class="skeleton" style="height:110px;border-radius:14px"></div>').join('')}
+      </div>
+    </div>`;
+        }
+
+        function showWeatherError(msg) {
+            document.getElementById('weatherResult').innerHTML =
+                `<div class="error-box">⚠️ ${msg}</div>`;
+        }
+
+        function renderWeather(cur, fore, city, country) {
+            const icon = weatherIcon(cur.weather[0].id, cur.weather[0].icon.slice(-1));
+            const temp = Math.round(cur.main.temp);
+            const feels = Math.round(cur.main.feels_like);
+            const desc = cur.weather[0].description;
+            const humid = cur.main.humidity;
+            const windSpd = Math.round(cur.wind.speed * 3.6);
+            const windD = windDir(cur.wind.deg);
+            const pressure = cur.main.pressure;
+            const vis = cur.visibility ? (cur.visibility / 1000).toFixed(1) : '—';
+            const clouds = cur.clouds?.all ?? '—';
+
+            // local time
+            const offset = cur.timezone;
+            const localMs = Date.now() + offset * 1000 + new Date().getTimezoneOffset() * 60000;
+            const localDt = new Date(localMs);
+            const timeStr = localDt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = localDt.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+            // daily from 3h
             const days = {};
             for (const item of fore.list) {
-                const d = new Date(item.dt * 1000);
-                const key = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+                const d = new Date(item.dt * 1000 + offset * 1000 + new Date().getTimezoneOffset() * 60000);
+                const key = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' });
                 if (!days[key]) days[key] = { temps: [], icons: [], descs: [] };
                 days[key].temps.push(item.main.temp);
                 days[key].icons.push(weatherIcon(item.weather[0].id, 'd'));
@@ -987,252 +1217,153 @@
                 const lo = Math.round(Math.min(...d.temps));
                 const ic = d.icons[Math.floor(d.icons.length / 2)];
                 const dc = d.descs[Math.floor(d.descs.length / 2)];
-                return `<div class="forecast-item">
-        <span class="fc-day">${day}</span>
-        <span class="fc-icon">${ic}</span>
-        <span class="fc-desc">${dc}</span>
-        <span class="fc-temps">${hi}° <span class="fc-lo">/ ${lo}°</span></span>
-      </div>`;
+                const [weekday, num] = day.split(' ');
+                return `<div class="fc-card">
+      <div class="fc-day">${weekday} ${num || ''}</div>
+      <div class="fc-ico">${ic}</div>
+      <div class="fc-hi">${hi}°</div>
+      <div class="fc-lo">${lo}°</div>
+      <div class="fc-desc">${dc}</div>
+    </div>`;
             }).join('');
 
-            // currency rates
-            let currencyHTML = '';
-            const flag = CURRENCY_FLAGS[currency] || '🏳️';
-            const name = CURRENCY_NAMES[currency] || currency;
+            // UV / sunrise / sunset extras
+            const sunriseTs = cur.sys?.sunrise;
+            const sunsetTs = cur.sys?.sunset;
+            const sunrise = sunriseTs ? new Date((sunriseTs + offset + new Date().getTimezoneOffset() * 60) * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+            const sunset = sunsetTs ? new Date((sunsetTs + offset + new Date().getTimezoneOffset() * 60) * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
 
-            if (Object.keys(rates).length > 0) {
-                const major = ['USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD'].filter(c => c !== currency).slice(0, 6);
-                const rateRows = major.map(c => {
-                    const rate = rates[c];
-                    if (!rate) return '';
-                    return `<div class="rate-row">
-          <span class="rate-label">${CURRENCY_FLAGS[c] || ''} ${c}</span>
-          <span class="rate-value">${rate.toFixed(4)}</span>
-        </div>`;
-                }).join('');
-
-                currencyHTML = `
-        <div class="forecast-title">💰 Moeda local</div>
-        <div class="currency-section">
-          <div class="currency-header">
-            <span class="currency-flag">${flag}</span>
-            <div>
-              <div class="currency-name">${name}</div>
-              <div class="currency-code">1 ${currency} =</div>
-            </div>
-          </div>
-          ${rateRows}
-          <button onclick="openConverterWith('${currency}')" style="
-            margin-top:12px; width:100%; padding:9px;
-            background:var(--accent); border:none; border-radius:9px;
-            color:#fff; font-size:0.83rem; font-weight:600; cursor:pointer;
-          ">Abrir conversor →</button>
-        </div>`;
-            }
-
-            document.getElementById('panelTitle').textContent = `${icon} ${city}`;
-            document.getElementById('panelBody').innerHTML = `
-      <div class="weather-hero">
-        <div class="w-location">📍 ${city}, ${country}</div>
-        <div class="w-main">
-          <span class="w-icon">${icon}</span>
+            document.getElementById('weatherResult').innerHTML = `
+    <div class="weather-result">
+      <div class="w-hero">
+        <div class="w-top">
           <div>
-            <div class="w-temp">${temp}</div>
-            <div class="w-desc">${desc}</div>
+            <div class="w-place-name">${city}</div>
+            <div class="w-place-sub">📍 ${country}</div>
+          </div>
+          <div class="w-datetime">
+            <div class="w-time">${timeStr}</div>
+            <div class="w-date">${dateStr}</div>
           </div>
         </div>
-        <div class="w-grid">
-          <div class="w-stat"><div class="w-stat-label">Sensação</div><div class="w-stat-value">${feels}</div></div>
-          <div class="w-stat"><div class="w-stat-label">Umidade</div><div class="w-stat-value">${humid}%</div></div>
-          <div class="w-stat"><div class="w-stat-label">Vento</div><div class="w-stat-value">${wind}</div></div>
-          <div class="w-stat"><div class="w-stat-label">Pressão</div><div class="w-stat-value">${pressure}</div></div>
+        <div class="w-middle">
+          <div class="w-emoji">${icon}</div>
+          <div>
+            <div class="w-temp-big">${temp}°</div>
+            <div class="w-desc">${desc}</div>
+            <div class="w-feel">Sensação ${feels}°C</div>
+          </div>
+        </div>
+        <div class="w-stats">
+          <div class="w-stat-box"><div class="w-stat-ico">💧</div><div class="w-stat-val">${humid}%</div><div class="w-stat-lbl">Umidade</div></div>
+          <div class="w-stat-box"><div class="w-stat-ico">🌬️</div><div class="w-stat-val">${windSpd} km/h</div><div class="w-stat-lbl">Vento ${windD}</div></div>
+          <div class="w-stat-box"><div class="w-stat-ico">👁️</div><div class="w-stat-val">${vis} km</div><div class="w-stat-lbl">Visibilidade</div></div>
+          <div class="w-stat-box"><div class="w-stat-ico">🌡️</div><div class="w-stat-val">${pressure} hPa</div><div class="w-stat-lbl">Pressão</div></div>
         </div>
       </div>
 
-      <div class="forecast-title">📅 Próximos dias</div>
-      <div class="forecast-list">${forecastHTML}</div>
+      <div class="section-heading">Próximos dias</div>
+      <div class="forecast-row">${forecastHTML}</div>
 
-      ${currencyHTML}
-    `;
+      <div class="extras-row">
+        <div class="extra-card"><div class="extra-title">☁️ Nebulosidade</div><div class="extra-val">${clouds}%</div><div class="extra-sub">cobertura</div></div>
+        <div class="extra-card"><div class="extra-title">🌅 Nascer</div><div class="extra-val">${sunrise}</div><div class="extra-sub">hora local</div></div>
+        <div class="extra-card"><div class="extra-title">🌇 Pôr do Sol</div><div class="extra-val">${sunset}</div><div class="extra-sub">hora local</div></div>
+      </div>
+    </div>`;
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           CONVERTER
-        ═══════════════════════════════════════════════════════════ */
-        const ALL_CURRENCIES = [
-            'USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'HKD', 'NZD', 'SEK',
-            'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'ARS', 'CLP', 'COP', 'PEN',
-            'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'MYR', 'PHP', 'VND', 'NGN', 'ILS', 'SAR', 'AED',
-            'CZK', 'HUF', 'RON', 'UAH', 'BDT', 'PKR', 'QAR', 'KWD', 'BHD', 'OMR', 'EGP', 'MAD',
-        ];
+        /* ═══════════════════════════════ CURRENCY ═══════════════════════════ */
+        let convInitialized = false;
+        let ratesCache = {};
+        let ratesBase = '';
 
-        function populateSelects() {
+        async function initConverter() {
+            convInitialized = true;
             const from = document.getElementById('convFrom');
             const to = document.getElementById('convTo');
             from.innerHTML = '';
             to.innerHTML = '';
-            for (const c of ALL_CURRENCIES) {
-                const f = CURRENCY_FLAGS[c] || '';
-                from.innerHTML += `<option value="${c}">${f} ${c}</option>`;
-                to.innerHTML += `<option value="${c}">${f} ${c}</option>`;
+            for (const c of CURRENCIES) {
+                from.innerHTML += `<option value="${c.code}">${c.flag} ${c.code}</option>`;
+                to.innerHTML += `<option value="${c.code}">${c.flag} ${c.code}</option>`;
             }
             from.value = 'USD';
             to.value = 'BRL';
+
+            document.getElementById('convAmount').addEventListener('input', doConvert);
+            from.addEventListener('change', () => { ratesCache = {}; doConvert(); loadRatesGrid(); });
+            to.addEventListener('change', doConvert);
+
+            await doConvert();
+            await loadRatesGrid();
         }
 
-        async function initConverter() {
-            populateSelects();
-            await convert();
-            loadPopularRates();
-
-            document.getElementById('convAmount').addEventListener('input', convert);
-            document.getElementById('convFrom').addEventListener('change', async () => { ratesCache = {}; await convert(); loadPopularRates(); });
-            document.getElementById('convTo').addEventListener('change', convert);
+        async function fetchRates(base) {
+            if (ratesBase === base && Object.keys(ratesCache).length > 0) return ratesCache;
+            const r = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_KEY}/latest/${base}`);
+            const d = await r.json();
+            if (d.result === 'success') { ratesCache = d.conversion_rates; ratesBase = base; }
+            return ratesCache;
         }
 
-        async function convert() {
+        async function doConvert() {
             const amount = parseFloat(document.getElementById('convAmount').value) || 0;
             const from = document.getElementById('convFrom').value;
             const to = document.getElementById('convTo').value;
-            const res = document.getElementById('convResult');
-            res.textContent = '…';
+            const numEl = document.getElementById('convResultNum');
+            const rateEl = document.getElementById('convResultRate');
+            const resIn = document.getElementById('convResultInput');
+            numEl.textContent = '…';
+            rateEl.textContent = '';
             try {
                 const rates = await fetchRates(from);
                 const rate = rates[to];
-                if (!rate) { res.textContent = '—'; return; }
-                const result = (amount * rate).toLocaleString('pt-BR', { maximumFractionDigits: 4 });
-                const rateStr = rate.toFixed(4);
-                res.innerHTML = `<div style="font-size:1.3rem">${result} ${to}</div>
-        <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">1 ${from} = ${rateStr} ${to}</div>`;
-            } catch {
-                res.textContent = 'Erro ao buscar taxa';
-            }
+                if (!rate) return;
+                const result = amount * rate;
+                const fmt = result.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                numEl.textContent = `${fmt} ${to}`;
+                rateEl.textContent = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+                resIn.value = fmt;
+            } catch { numEl.textContent = 'Erro'; }
         }
 
-        async function loadPopularRates() {
-            const from = document.getElementById('convFrom').value;
-            const rates = await fetchRates(from);
-            const major = ['USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF'].filter(c => c !== from).slice(0, 6);
-            const html = major.map(c => {
-                const r = rates[c];
-                if (!r) return '';
-                return `<div class="rate-row">
-        <span class="rate-label">${CURRENCY_FLAGS[c] || ''} ${c} — ${CURRENCY_NAMES[c] || c}</span>
-        <span class="rate-value">${r.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}</span>
-      </div>`;
-            }).join('');
-            document.getElementById('popularRates').innerHTML = `
-      <div class="forecast-title" style="margin-top:0">Taxas populares (base: ${from})</div>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:4px 12px">${html}</div>`;
-        }
-
-        function swapCurrencies() {
+        async function swapCurrencies() {
             const from = document.getElementById('convFrom');
             const to = document.getElementById('convTo');
             [from.value, to.value] = [to.value, from.value];
             ratesCache = {};
-            convert();
-            loadPopularRates();
+            await doConvert();
+            await loadRatesGrid();
         }
 
-        function openConverterWith(currency) {
-            document.getElementById('converterPanel').classList.add('open');
-            document.getElementById('weatherPanel').classList.remove('open');
-            document.getElementById('btnConverter').classList.add('active');
-            document.getElementById('btnWeather').classList.remove('active');
-            initConverter().then(() => {
-                document.getElementById('convFrom').value = currency;
-                ratesCache = {};
-                convert();
-                loadPopularRates();
-            });
+        async function loadRatesGrid() {
+            const from = document.getElementById('convFrom').value;
+            const rates = await fetchRates(from);
+            const popular = ['USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'MXN', 'KRW', 'INR'].filter(c => c !== from).slice(0, 12);
+            const grid = document.getElementById('ratesGrid');
+            grid.innerHTML = popular.map(code => {
+                const c = getCurrencyByCode(code);
+                const val = rates[code];
+                if (!val) return '';
+                const fmt = val >= 1000
+                    ? val.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+                    : val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                return `<div class="rate-card" onclick="setConvTo('${code}')">
+      <div class="rate-flag">${c.flag}</div>
+      <div class="rate-code">${c.code}</div>
+      <div class="rate-name">${c.name}</div>
+      <div class="rate-value">${fmt}</div>
+      <div class="rate-base">por 1 ${from}</div>
+    </div>`;
+            }).join('');
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           SEARCH
-        ═══════════════════════════════════════════════════════════ */
-        let searchTimeout;
-
-        document.getElementById('searchInput').addEventListener('input', function () {
-            clearTimeout(searchTimeout);
-            const q = this.value.trim();
-            if (q.length < 3) { document.getElementById('searchResults').classList.remove('open'); return; }
-            searchTimeout = setTimeout(() => doSearch(q), 350);
-        });
-
-        document.getElementById('searchInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                this.value = '';
-                document.getElementById('searchResults').classList.remove('open');
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-wrap')) {
-                document.getElementById('searchResults').classList.remove('open');
-            }
-        });
-
-        async function doSearch(q) {
-            const r = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6`,
-                { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }
-            );
-            const data = await r.json();
-            const el = document.getElementById('searchResults');
-            if (!data.length) { el.classList.remove('open'); return; }
-
-            el.innerHTML = data.map((item, i) =>
-                `<div class="search-result-item" data-i="${i}">${item.display_name}</div>`
-            ).join('');
-            el.classList.add('open');
-
-            el.querySelectorAll('.search-result-item').forEach((div, i) => {
-                div.addEventListener('click', () => {
-                    const item = data[i];
-                    const lat = parseFloat(item.lat);
-                    const lon = parseFloat(item.lon);
-                    map.flyTo([lat, lon], 8, { duration: 1.2 });
-                    el.classList.remove('open');
-                    document.getElementById('searchInput').value = '';
-                    map.fire('click', { latlng: L.latLng(lat, lon) });
-                });
-            });
+        function setConvTo(code) {
+            document.getElementById('convTo').value = code;
+            doConvert();
         }
-
-        /* ═══════════════════════════════════════════════════════════
-           TOAST
-        ═══════════════════════════════════════════════════════════ */
-        function showToast(msg, ms = 2500) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), ms);
-        }
-
-        /* ═══════════════════════════════════════════════════════════
-           INIT HINT
-        ═══════════════════════════════════════════════════════════ */
-        setTimeout(() => showToast('🌍 Clique em qualquer lugar do mapa para ver o clima e a moeda local'), 1200);
     </script>
-
-    <!-- Google AdSense (ative depois de aprovado) -->
-    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
-
-    <!-- Schema.org para SEO -->
-    <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Atlas",
-  "url": "https://atlascw.com.br",
-  "description": "Mapa mundial interativo com previsão do tempo em tempo real e conversor de moedas.",
-  "applicationCategory": "UtilityApplication",
-  "operatingSystem": "Web",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" }
-}
-</script>
-
 </body>
 
 </html>
