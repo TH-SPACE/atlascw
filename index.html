@@ -826,6 +826,10 @@
                     autocomplete="off" />
                 <div class="suggestions" id="suggestions"></div>
             </div>
+            <button onclick="useMyLocation()" class="icon-btn" title="Usar minha localização"
+                style="width:auto;padding:0 12px;gap:6px;border-radius:100px;font-size:0.78rem">
+                📍 <span style="display:none" id="locBtnText">Minha localização</span>
+            </button>
 
             <div class="nav-right">
                 <button class="tv-mode-btn" onclick="toggleTV()" id="tvBtn">📺 Modo TV</button>
@@ -1510,29 +1514,41 @@
         loop();
 
         /* ══════════════════════════════════════════════════════════
-           AUTO-LOAD: geolocalização automática, fallback São Paulo
+           AUTO-LOAD: São Paulo imediato + geolocalização em paralelo
         ══════════════════════════════════════════════════════════ */
+
+        // Carrega São Paulo imediatamente — nunca fica tela vazia
+        loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR');
+
+        // Tenta geolocalização em paralelo — se funcionar, sobrepõe
         async function loadByCoords(lat, lon) {
             try {
                 const geo = await fetch(
                     `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${OWM_KEY}`
                 ).then(r => r.json());
-                const city = geo[0]?.name || 'Localização atual';
+                const city = geo[0]?.name || 'Sua localização';
                 const country = geo[0]?.country || '';
                 loadWeather(lat, lon, city, country);
-            } catch {
-                loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR');
-            }
+            } catch { /* mantém São Paulo */ }
         }
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 pos => loadByCoords(pos.coords.latitude, pos.coords.longitude),
-                () => loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR'),
-                { timeout: 6000 }
+                () => { /* mantém São Paulo */ },
+                { timeout: 8000 }
             );
-        } else {
-            loadWeather(-23.5505, -46.6333, 'São Paulo', 'BR');
+        }
+
+        function useMyLocation() {
+            if (!navigator.geolocation) return;
+            const btn = document.querySelector('[onclick="useMyLocation()"]');
+            if (btn) btn.textContent = '⏳';
+            navigator.geolocation.getCurrentPosition(
+                pos => { if (btn) btn.textContent = '📍'; loadByCoords(pos.coords.latitude, pos.coords.longitude); },
+                () => { if (btn) btn.textContent = '📍'; },
+                { timeout: 8000 }
+            );
         }
     </script>
 
