@@ -4,195 +4,653 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Atlas</title>
+
+    <!-- SEO -->
+    <title>Atlas — Mapa Mundial, Previsão do Tempo e Conversor de Moedas</title>
+    <meta name="description"
+        content="Explore o mapa mundial interativo Atlas. Clique em qualquer país para ver previsão do tempo em tempo real e converta moedas de todo o mundo com taxas atualizadas." />
+    <meta name="keywords"
+        content="mapa mundial, previsão do tempo, conversor de moedas, clima ao vivo, câmbio, atlas, temperatura hoje" />
+    <meta name="author" content="Atlas" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://atlascw.com.br/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://atlascw.com.br/" />
+    <meta property="og:title" content="Atlas — Mapa, Tempo e Moedas" />
+    <meta property="og:description"
+        content="Mapa mundial interativo com previsão do tempo e conversor de moedas em tempo real." />
+    <meta property="og:image" content="https://atlascw.com.br/og.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Atlas — Mapa, Tempo e Moedas" />
+    <meta name="twitter:description" content="Mapa mundial interativo com clima e conversor de moedas." />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+
     <style>
-        * {
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2235;
+            --border: #1e2d45;
+            --accent: #3b82f6;
+            --accent2: #60a5fa;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --success: #22c55e;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --panel-w: 360px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
+        html,
         body {
-            background: #000;
-            overflow: hidden;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-
-        canvas {
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
-
-        .ui {
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ── MAP ── */
+        #map {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+        }
+
+        .leaflet-container {
+            background: #060d1a;
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: rgba(10, 14, 26, 0.88);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--accent2);
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+            white-space: nowrap;
+        }
+
+        .search-wrap {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-wrap input {
+            width: 100%;
+            padding: 8px 14px 8px 36px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-wrap input::placeholder {
+            color: var(--muted);
+        }
+
+        .search-wrap .ico {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .search-results {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+            z-index: 200;
+        }
+
+        .search-results.open {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.15s;
+        }
+
+        .search-result-item:hover {
+            background: var(--surface2);
+        }
+
+        .topbar-right {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .tab-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active,
+        .tab-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* ── SIDE PANEL ── */
+        .panel {
+            position: fixed;
+            top: 56px;
+            right: 0;
+            bottom: 0;
+            width: var(--panel-w);
+            background: rgba(10, 14, 26, 0.95);
+            backdrop-filter: blur(16px);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .panel.open {
+            transform: translateX(0);
+        }
+
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--text);
+        }
+
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .panel-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .panel-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .panel-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        /* ── WEATHER CARD ── */
+        .weather-hero {
+            background: linear-gradient(135deg, #0f2044 0%, #0a1628 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .weather-hero::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .w-location {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .w-city {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .w-country {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .w-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .w-icon {
+            font-size: 3rem;
+            line-height: 1;
+        }
+
+        .w-temp {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            color: var(--text);
+        }
+
+        .w-desc {
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-transform: capitalize;
+            margin-top: 2px;
+        }
+
+        .w-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .w-stat {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .w-stat-label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .w-stat-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        /* forecast */
+        .forecast-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 16px 0 8px;
+        }
+
+        .forecast-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .forecast-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fc-day {
+            font-size: 0.8rem;
+            font-weight: 500;
+            width: 36px;
+        }
+
+        .fc-icon {
+            font-size: 1.2rem;
+        }
+
+        .fc-desc {
+            flex: 1;
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-transform: capitalize;
+        }
+
+        .fc-temps {
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .fc-lo {
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        /* currency */
+        .currency-section {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .currency-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .currency-flag {
+            font-size: 1.4rem;
+        }
+
+        .currency-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .currency-code {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .rate-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.82rem;
+        }
+
+        .rate-row:last-child {
+            border-bottom: none;
+        }
+
+        .rate-label {
+            color: var(--muted);
+        }
+
+        .rate-value {
+            font-weight: 600;
+        }
+
+        /* ── CONVERTER ── */
+        .converter {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .converter h3 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .conv-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .conv-input {
+            flex: 1;
+            padding: 9px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .conv-input:focus {
+            border-color: var(--accent);
+        }
+
+        .conv-select {
+            padding: 9px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text);
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+            min-width: 80px;
+        }
+
+        .conv-arrow {
+            text-align: center;
+            color: var(--muted);
+            font-size: 1rem;
+            padding: 4px 0;
+        }
+
+        .conv-result {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 9px;
+            padding: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent2);
+            min-height: 44px;
+        }
+
+        /* ── LOADING / EMPTY ── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 8px;
+            height: 16px;
+            margin-bottom: 8px;
+        }
+
+        @keyframes shimmer {
+            to {
+                background-position: -200% 0;
+            }
+        }
+
+        .empty-state {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            pointer-events: none;
-            z-index: 10;
+            height: 100%;
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--muted);
         }
 
-        .logo {
-            font-size: clamp(4.5rem, 13vw, 10rem);
-            font-weight: 900;
-            letter-spacing: -6px;
-            color: transparent;
-            background: linear-gradient(135deg, #ffffff 0%, #a0c4ff 50%, #ffffff 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            line-height: 1;
-            text-transform: uppercase;
-            filter: drop-shadow(0 0 40px rgba(80, 140, 255, 0.8)) drop-shadow(0 0 100px rgba(40, 80, 255, 0.4));
-            animation: logoIn 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            transform: scale(0.8);
+        .empty-state .ico {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
         }
 
-        @keyframes logoIn {
+        .empty-state p {
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        /* ── CONVERTER STANDALONE ── */
+        .converter-panel {
+            position: fixed;
+            top: 56px;
+            right: 0;
+            bottom: 0;
+            width: var(--panel-w);
+            background: rgba(10, 14, 26, 0.95);
+            backdrop-filter: blur(16px);
+            border-left: 1px solid var(--border);
+            z-index: 50;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .converter-panel.open {
+            transform: translateX(0);
+        }
+
+        /* ── MAP CLICK PULSE ── */
+        .pulse-marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.8);
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+            animation: pulse 1.5s ease-out infinite;
+        }
+
+        @keyframes pulse {
             0% {
-                opacity: 0;
-                transform: scale(0.8) translateY(20px);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 14px rgba(59, 130, 246, 0);
             }
 
             100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
             }
         }
 
-        /* trail canvas */
-        #trail {
+        /* ── TOAST ── */
+        .toast {
             position: fixed;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 9;
-        }
-
-        /* scan line */
-        .scanline {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(0, 0, 0, 0.03) 2px,
-                    rgba(0, 0, 0, 0.03) 4px);
-            pointer-events: none;
-            z-index: 20;
-            mix-blend-mode: multiply;
-        }
-
-        /* vignette */
-        .vignette {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.85) 100%);
-            pointer-events: none;
-            z-index: 8;
-        }
-
-        /* corner decorations */
-        .corner {
-            position: fixed;
-            width: 60px;
-            height: 60px;
-            pointer-events: none;
-            z-index: 15;
-            opacity: 0;
-            animation: fadeCorner 2s 1s ease forwards;
-        }
-
-        .corner::before,
-        .corner::after {
-            content: '';
-            position: absolute;
-            background: rgba(80, 160, 255, 0.6);
-        }
-
-        .corner::before {
-            width: 2px;
-            height: 30px;
-        }
-
-        .corner::after {
-            width: 30px;
-            height: 2px;
-        }
-
-        .tl {
-            top: 24px;
-            left: 24px;
-        }
-
-        .tl::before {
-            top: 0;
-            left: 0;
-        }
-
-        .tl::after {
-            top: 0;
-            left: 0;
-        }
-
-        .tr {
-            top: 24px;
-            right: 24px;
-        }
-
-        .tr::before {
-            top: 0;
-            right: 0;
-        }
-
-        .tr::after {
-            top: 0;
-            right: 0;
-        }
-
-        .bl {
             bottom: 24px;
-            left: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            transition: transform 0.3s;
+            z-index: 999;
         }
 
-        .bl::before {
-            bottom: 0;
-            left: 0;
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
         }
 
-        .bl::after {
-            bottom: 0;
-            left: 0;
-        }
+        /* ── MOBILE ── */
+        @media (max-width: 600px) {
+            :root {
+                --panel-w: 100vw;
+            }
 
-        .br {
-            bottom: 24px;
-            right: 24px;
-        }
+            .logo {
+                font-size: 1.1rem;
+            }
 
-        .br::before {
-            bottom: 0;
-            right: 0;
-        }
-
-        .br::after {
-            bottom: 0;
-            right: 0;
-        }
-
-        @keyframes fadeCorner {
-            to {
-                opacity: 1;
+            .tab-btn span {
+                display: none;
             }
         }
     </style>
@@ -200,461 +658,581 @@
 
 <body>
 
-    <canvas id="c"></canvas>
-    <canvas id="trail"></canvas>
-    <div class="vignette"></div>
-    <div class="scanline"></div>
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
+    <!-- MAP -->
+    <div id="map"></div>
 
-    <div class="ui">
-        <div class="logo">Atlas</div>
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="logo">🌍 Atlas</div>
+
+        <div class="search-wrap">
+            <span class="ico">🔍</span>
+            <input id="searchInput" type="text" placeholder="Buscar cidade ou país..." autocomplete="off" />
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <div class="topbar-right">
+            <button class="tab-btn" id="btnWeather" onclick="openWeatherPanel()">🌤 <span>Tempo</span></button>
+            <button class="tab-btn" id="btnConverter" onclick="toggleConverter()">💱 <span>Moedas</span></button>
+        </div>
     </div>
 
-    <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"
-    }
-  }
-  </script>
+    <!-- WEATHER PANEL -->
+    <div class="panel" id="weatherPanel">
+        <div class="panel-header">
+            <span class="panel-title" id="panelTitle">Previsão do Tempo</span>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+        <div class="panel-body" id="panelBody">
+            <div class="empty-state">
+                <div class="ico">🗺️</div>
+                <p>Clique em qualquer ponto do mapa para ver a previsão do tempo e informações de moeda local.</p>
+            </div>
+        </div>
+    </div>
 
-    <script type="module">
-        import * as THREE from 'three';
+    <!-- CONVERTER PANEL -->
+    <div class="converter-panel" id="converterPanel">
+        <div class="panel-header">
+            <span class="panel-title">💱 Conversor de Moedas</span>
+            <button class="close-btn" onclick="closeConverter()">✕</button>
+        </div>
+        <div class="panel-body">
+            <div class="converter" style="background:transparent;border:none;padding:0">
+                <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px">Taxas atualizadas em tempo real</p>
 
-        /* ─── RENDERER ────────────────────────────────────────── */
-        const canvas = document.getElementById('c');
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
+                <div class="conv-row">
+                    <input class="conv-input" type="number" id="convAmount" value="1" min="0" step="any" />
+                    <select class="conv-select" id="convFrom"></select>
+                </div>
 
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000510, 0.04);
+                <div class="conv-arrow">⬇️</div>
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 200);
-        camera.position.set(0, 0, 3.6);
+                <div class="conv-row" style="margin-top:10px">
+                    <select class="conv-select" id="convTo" style="flex:1"></select>
+                </div>
 
-        /* ─── CUSTOM SHADERS ──────────────────────────────────── */
+                <div class="conv-result" id="convResult" style="margin-top:12px">—</div>
 
-        // Atmosphere shader (rim glow)
-        const atmoVS = `
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      void main() {
-        vNormal  = normalize(normalMatrix * normal);
-        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-        vViewDir = normalize(-mvPos.xyz);
-        gl_Position = projectionMatrix * mvPos;
-      }
-    `;
-        const atmoFS = `
-      uniform vec3 glowColor;
-      uniform float coeff;
-      uniform float power;
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      void main() {
-        float intensity = pow(coeff - dot(vNormal, vViewDir), power);
-        gl_FragColor = vec4(glowColor, intensity);
-      }
-    `;
+                <button onclick="swapCurrencies()" style="
+        width:100%; margin-top:10px; padding:10px;
+        background:var(--surface); border:1px solid var(--border);
+        border-radius:9px; color:var(--text); cursor:pointer; font-size:0.85rem;
+        transition:background 0.2s;
+      ">🔄 Inverter moedas</button>
 
-        const atmoMat = new THREE.ShaderMaterial({
-            uniforms: {
-                glowColor: { value: new THREE.Color(0x2266ff) },
-                coeff: { value: 0.8 },
-                power: { value: 3.5 },
-            },
-            vertexShader: atmoVS,
-            fragmentShader: atmoFS,
-            side: THREE.FrontSide,
-            blending: THREE.AdditiveBlending,
-            transparent: true,
-            depthWrite: false,
+                <div id="popularRates" style="margin-top:20px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        /* ═══════════════════════════════════════════════════════════
+           KEYS
+        ═══════════════════════════════════════════════════════════ */
+        const OWM_KEY = 'f4549c9b4d1799e4b5a4ac45c876c951';
+        const EXCHANGE_KEY = '2c3d34684b416f3cae51daa8';
+
+        /* ═══════════════════════════════════════════════════════════
+           MAP SETUP
+        ═══════════════════════════════════════════════════════════ */
+        const map = L.map('map', {
+            center: [20, 10],
+            zoom: 3,
+            zoomControl: false,
+            attributionControl: true,
         });
 
-        // Outer halo
-        const haloMat = new THREE.ShaderMaterial({
-            uniforms: {
-                glowColor: { value: new THREE.Color(0x0033cc) },
-                coeff: { value: 0.6 },
-                power: { value: 2.5 },
-            },
-            vertexShader: atmoVS,
-            fragmentShader: atmoFS,
-            side: THREE.BackSide,
-            blending: THREE.AdditiveBlending,
-            transparent: true,
-            depthWrite: false,
-        });
+        // Dark map tiles
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19,
+        }).addTo(map);
 
-        /* ─── GLOBE ───────────────────────────────────────────── */
-        const R = 1.0;
-        const geoGlobe = new THREE.SphereGeometry(R, 128, 128);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // Build vertex colors (fake continents via multi-octave sine)
-        const pos = geoGlobe.attributes.position;
-        const colArr = new Float32Array(pos.count * 3);
-        const cLand = new THREE.Color(0x0d2d5c);
-        const cOcean = new THREE.Color(0x040e1e);
-        const cPolar = new THREE.Color(0x4488cc);
+        /* ═══════════════════════════════════════════════════════════
+           CURRENCIES per country code
+        ═══════════════════════════════════════════════════════════ */
+        const COUNTRY_CURRENCY = {
+            BR: 'BRL', US: 'USD', GB: 'GBP', EU: 'EUR', DE: 'EUR', FR: 'EUR', IT: 'EUR',
+            ES: 'EUR', PT: 'EUR', JP: 'JPY', CN: 'CNY', IN: 'INR', MX: 'MXN', CA: 'CAD',
+            AU: 'AUD', RU: 'RUB', ZA: 'ZAR', KR: 'KRW', AR: 'ARS', CL: 'CLP', CO: 'COP',
+            PE: 'PEN', NG: 'NGN', EG: 'EGP', SA: 'SAR', AE: 'AED', TR: 'TRY', TH: 'THB',
+            ID: 'IDR', MY: 'MYR', SG: 'SGD', PH: 'PHP', PK: 'PKR', BD: 'BDT', VN: 'VND',
+            HK: 'HKD', TW: 'TWD', NZ: 'NZD', NO: 'NOK', SE: 'SEK', DK: 'DKK', CH: 'CHF',
+            PL: 'PLN', CZ: 'CZK', HU: 'HUF', RO: 'RON', UA: 'UAH', IL: 'ILS', BO: 'BOB',
+            EC: 'USD', VE: 'VES', UY: 'UYU', PY: 'PYG', GT: 'GTQ', HN: 'HNL', CR: 'CRC',
+            PA: 'PAB', CU: 'CUP', DO: 'DOP', JM: 'JMD', MA: 'MAD', DZ: 'DZD', TN: 'TND',
+            GH: 'GHS', KE: 'KES', ET: 'ETB', TZ: 'TZS', UG: 'UGX', CM: 'XAF', CI: 'XOF',
+            SN: 'XOF', MZ: 'MZN', AO: 'AOA', ZW: 'ZWL', IQ: 'IQD', IR: 'IRR', KW: 'KWD',
+            QA: 'QAR', BH: 'BHD', OM: 'OMR', JO: 'JOD', LB: 'LBP', SY: 'SYP', YE: 'YER',
+            AF: 'AFN', NP: 'NPR', LK: 'LKR', MM: 'MMK', KH: 'KHR', LA: 'LAK', KZ: 'KZT',
+            UZ: 'UZS', TM: 'TMT', GE: 'GEL', AM: 'AMD', AZ: 'AZN', BY: 'BYN', MD: 'MDL',
+            RS: 'RSD', HR: 'HRK', BG: 'BGN', GR: 'EUR', SK: 'EUR', SI: 'EUR', EE: 'EUR',
+            LV: 'EUR', LT: 'EUR', FI: 'EUR', AT: 'EUR', BE: 'EUR', NL: 'EUR', LU: 'EUR',
+            IE: 'EUR', CY: 'EUR', MT: 'EUR',
+        };
 
-        for (let i = 0; i < pos.count; i++) {
-            const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-            // multi-octave noise
-            const n = Math.sin(x * 5.2 + 1.3) * Math.cos(y * 4.1 + 0.9) * Math.sin(z * 6.3 + 2.0)
-                + Math.sin(x * 9.1 + y * 7.0) * 0.35
-                + Math.cos(z * 8.5 + x * 3.2) * 0.2;
-            // polar cap
-            const lat = Math.abs(y);
-            let c;
-            if (lat > 0.88) c = cPolar;
-            else if (n > 0.15) c = cLand;
-            else c = cOcean;
-            colArr[i * 3] = c.r;
-            colArr[i * 3 + 1] = c.g;
-            colArr[i * 3 + 2] = c.b;
+        const CURRENCY_NAMES = {
+            BRL: 'Real Brasileiro', USD: 'Dólar Americano', EUR: 'Euro', GBP: 'Libra Esterlina',
+            JPY: 'Iene Japonês', CNY: 'Yuan Chinês', INR: 'Rúpia Indiana', CAD: 'Dólar Canadense',
+            AUD: 'Dólar Australiano', CHF: 'Franco Suíço', MXN: 'Peso Mexicano', RUB: 'Rublo Russo',
+            ZAR: 'Rand Sul-Africano', KRW: 'Won Sul-Coreano', ARS: 'Peso Argentino', CLP: 'Peso Chileno',
+            COP: 'Peso Colombiano', PEN: 'Sol Peruano', TRY: 'Lira Turca', SAR: 'Riyal Saudita',
+            AED: 'Dirham Emirados', SGD: 'Dólar Singapura', HKD: 'Dólar Hong Kong', NZD: 'Dólar Neozelandês',
+            NOK: 'Coroa Norueguesa', SEK: 'Coroa Sueca', DKK: 'Coroa Dinamarquesa', PLN: 'Zloty Polonês',
+            ILS: 'Shekel Israelense', THB: 'Baht Tailandês', IDR: 'Rúpia Indonésia', MYR: 'Ringgit Malaio',
+            PHP: 'Peso Filipino', TWD: 'Dólar Taiwan', VND: 'Dong Vietnamita', NGN: 'Naira Nigeriana',
+        };
+
+        const CURRENCY_FLAGS = {
+            BRL: '🇧🇷', USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵', CNY: '🇨🇳', INR: '🇮🇳',
+            CAD: '🇨🇦', AUD: '🇦🇺', CHF: '🇨🇭', MXN: '🇲🇽', RUB: '🇷🇺', ZAR: '🇿🇦', KRW: '🇰🇷',
+            ARS: '🇦🇷', CLP: '🇨🇱', COP: '🇨🇴', TRY: '🇹🇷', SAR: '🇸🇦', AED: '🇦🇪', SGD: '🇸🇬',
+            HKD: '🇭🇰', NZD: '🇳🇿', NOK: '🇳🇴', SEK: '🇸🇪', DKK: '🇩🇰', PLN: '🇵🇱', THB: '🇹🇭',
+            IDR: '🇮🇩', MYR: '🇲🇾', PHP: '🇵🇭', VND: '🇻🇳', NGN: '🇳🇬', ILS: '🇮🇱', TWD: '🇹🇼',
+        };
+
+        /* ═══════════════════════════════════════════════════════════
+           WEATHER ICONS (OWM id ranges)
+        ═══════════════════════════════════════════════════════════ */
+        function weatherIcon(id, pod) {
+            const n = pod === 'n';
+            if (id >= 200 && id < 300) return '⛈️';
+            if (id >= 300 && id < 400) return '🌦️';
+            if (id >= 500 && id < 510) return '🌧️';
+            if (id === 511) return '🌨️';
+            if (id >= 520 && id < 600) return '🌧️';
+            if (id >= 600 && id < 700) return '❄️';
+            if (id >= 700 && id < 800) return '🌫️';
+            if (id === 800) return n ? '🌙' : '☀️';
+            if (id === 801) return n ? '🌙' : '🌤️';
+            if (id === 802) return '⛅';
+            if (id >= 803) return '☁️';
+            return '🌡️';
         }
-        geoGlobe.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
 
-        const matGlobe = new THREE.MeshPhongMaterial({
-            vertexColors: true,
-            specular: new THREE.Color(0x2244aa),
-            shininess: 60,
-        });
+        function fmtTemp(t) { return `${Math.round(t)}°C`; }
 
-        const globe = new THREE.Mesh(geoGlobe, matGlobe);
-        scene.add(globe);
-
-        // Atmosphere shell
-        scene.add(new THREE.Mesh(new THREE.SphereGeometry(R * 1.07, 64, 64), atmoMat));
-        scene.add(new THREE.Mesh(new THREE.SphereGeometry(R * 1.22, 64, 64), haloMat));
-
-        /* ─── GRID LINES ──────────────────────────────────────── */
-        const lineMat = new THREE.LineBasicMaterial({
-            color: 0x1a44aa, transparent: true, opacity: 0.3,
-            blending: THREE.AdditiveBlending, depthWrite: false,
-        });
-
-        function latLine(phi) {
-            const pts = [];
-            const r = Math.sin(phi) * (R + 0.002);
-            const yy = Math.cos(phi) * (R + 0.002);
-            for (let j = 0; j <= 128; j++) {
-                const a = (j / 128) * Math.PI * 2;
-                pts.push(new THREE.Vector3(Math.cos(a) * r, yy, Math.sin(a) * r));
-            }
-            return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat);
+        function windDir(deg) {
+            const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+            return dirs[Math.round(deg / 45) % 8];
         }
-        function lonLine(theta) {
-            const pts = [];
-            for (let j = 0; j <= 128; j++) {
-                const phi = (j / 128) * Math.PI;
-                pts.push(new THREE.Vector3(
-                    Math.sin(phi) * Math.cos(theta) * (R + 0.002),
-                    Math.cos(phi) * (R + 0.002),
-                    Math.sin(phi) * Math.sin(theta) * (R + 0.002),
-                ));
-            }
-            return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat);
-        }
-        for (let i = 1; i < 10; i++) globe.add(latLine((i / 10) * Math.PI));
-        for (let i = 0; i < 16; i++) globe.add(lonLine((i / 16) * Math.PI * 2));
 
-        /* ─── SURFACE DOTS ────────────────────────────────────── */
-        const dotPos = [];
-        for (let i = 0; i < 3000; i++) {
-            const phi = Math.acos(2 * Math.random() - 1);
-            const theta = Math.random() * Math.PI * 2;
-            const r = R + 0.004;
-            dotPos.push(
-                Math.sin(phi) * Math.cos(theta) * r,
-                Math.cos(phi) * r,
-                Math.sin(phi) * Math.sin(theta) * r,
+        /* ═══════════════════════════════════════════════════════════
+           REVERSE GEOCODE  (nominatim)
+        ═══════════════════════════════════════════════════════════ */
+        async function reverseGeocode(lat, lon) {
+            const r = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+                { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8' } }
             );
-        }
-        const dotGeo = new THREE.BufferGeometry();
-        dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPos, 3));
-        const dotMat = new THREE.PointsMaterial({
-            color: 0x4499ff, size: 0.007,
-            transparent: true, opacity: 0.55,
-            blending: THREE.AdditiveBlending, depthWrite: false,
-        });
-        globe.add(new THREE.Points(dotGeo, dotMat));
-
-        /* ─── ARC CONNECTIONS ─────────────────────────────────── */
-        function randomSurfacePoint() {
-            const phi = Math.acos(2 * Math.random() - 1);
-            const theta = Math.random() * Math.PI * 2;
-            return new THREE.Vector3(
-                Math.sin(phi) * Math.cos(theta),
-                Math.cos(phi),
-                Math.sin(phi) * Math.sin(theta),
-            );
+            return r.json();
         }
 
-        function makeArc(a, b, segments = 60) {
-            const pts = [];
-            for (let i = 0; i <= segments; i++) {
-                const t = i / segments;
-                const v = new THREE.Vector3().lerpVectors(a, b, t).normalize();
-                const h = 1 + Math.sin(t * Math.PI) * 0.28;  // arc height
-                pts.push(v.multiplyScalar(h));
+        /* ═══════════════════════════════════════════════════════════
+           WEATHER FETCH
+        ═══════════════════════════════════════════════════════════ */
+        async function fetchWeather(lat, lon) {
+            const [cur, fore] = await Promise.all([
+                fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=pt_br&appid=${OWM_KEY}`).then(r => r.json()),
+                fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=pt_br&cnt=40&appid=${OWM_KEY}`).then(r => r.json()),
+            ]);
+            return { cur, fore };
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           EXCHANGE RATES
+        ═══════════════════════════════════════════════════════════ */
+        let ratesCache = {};
+        let ratesBase = '';
+
+        async function fetchRates(base = 'USD') {
+            if (ratesBase === base && Object.keys(ratesCache).length > 0) return ratesCache;
+            const r = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_KEY}/latest/${base}`);
+            const d = await r.json();
+            if (d.result === 'success') {
+                ratesCache = d.conversion_rates;
+                ratesBase = base;
             }
-            return pts;
+            return ratesCache;
         }
 
-        const arcs = [];
-        const arcCount = 18;
-        const arcMat = new THREE.LineBasicMaterial({
-            color: 0x44aaff, transparent: true, opacity: 0,
-            blending: THREE.AdditiveBlending, depthWrite: false,
+        /* ═══════════════════════════════════════════════════════════
+           PANEL STATE
+        ═══════════════════════════════════════════════════════════ */
+        let currentMarker = null;
+        let currentCurrency = 'USD';
+
+        function openWeatherPanel() {
+            document.getElementById('weatherPanel').classList.add('open');
+            document.getElementById('converterPanel').classList.remove('open');
+            document.getElementById('btnWeather').classList.add('active');
+            document.getElementById('btnConverter').classList.remove('active');
+        }
+
+        function closePanel() {
+            document.getElementById('weatherPanel').classList.remove('open');
+            document.getElementById('btnWeather').classList.remove('active');
+        }
+
+        function toggleConverter() {
+            const p = document.getElementById('converterPanel');
+            const open = p.classList.contains('open');
+            if (open) {
+                closeConverter();
+            } else {
+                p.classList.add('open');
+                document.getElementById('weatherPanel').classList.remove('open');
+                document.getElementById('btnConverter').classList.add('active');
+                document.getElementById('btnWeather').classList.remove('active');
+                initConverter();
+            }
+        }
+
+        function closeConverter() {
+            document.getElementById('converterPanel').classList.remove('open');
+            document.getElementById('btnConverter').classList.remove('active');
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           MAP CLICK
+        ═══════════════════════════════════════════════════════════ */
+        map.on('click', async (e) => {
+            const { lat, lng } = e.latlng;
+
+            // Remove old marker
+            if (currentMarker) map.removeLayer(currentMarker);
+
+            // Pulse marker
+            const icon = L.divIcon({ className: '', html: '<div class="pulse-marker"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
+            currentMarker = L.marker([lat, lng], { icon }).addTo(map);
+
+            openWeatherPanel();
+            showLoading();
+
+            try {
+                const [geo, { cur, fore }] = await Promise.all([
+                    reverseGeocode(lat, lng),
+                    fetchWeather(lat, lng),
+                ]);
+
+                const countryCode = geo?.address?.country_code?.toUpperCase() || '';
+                const currency = COUNTRY_CURRENCY[countryCode] || 'USD';
+                currentCurrency = currency;
+
+                let rates = {};
+                try { rates = await fetchRates(currency); } catch (e) { }
+
+                renderWeatherPanel(cur, fore, geo, currency, rates);
+
+            } catch (err) {
+                document.getElementById('panelBody').innerHTML = `
+        <div class="empty-state">
+          <div class="ico">⚠️</div>
+          <p>Não foi possível carregar os dados. Verifique sua conexão e tente novamente.</p>
+        </div>`;
+            }
         });
 
-        for (let i = 0; i < arcCount; i++) {
-            const a = randomSurfacePoint();
-            const b = randomSurfacePoint();
-            const pts = makeArc(a, b);
-            const geo = new THREE.BufferGeometry().setFromPoints(pts);
-            const mat = arcMat.clone();
-            const line = new THREE.Line(geo, mat);
-            globe.add(line);
-            arcs.push({ line, mat, progress: 0, speed: 0.004 + Math.random() * 0.006, delay: Math.random() * 4 });
+        /* ═══════════════════════════════════════════════════════════
+           SHOW LOADING
+        ═══════════════════════════════════════════════════════════ */
+        function showLoading() {
+            document.getElementById('panelBody').innerHTML = `
+      <div style="padding:8px 0">
+        <div class="skeleton" style="height:180px;margin-bottom:12px"></div>
+        <div class="skeleton" style="width:60%"></div>
+        <div class="skeleton" style="width:80%"></div>
+        <div class="skeleton" style="width:50%"></div>
+        <div class="skeleton" style="height:120px;margin-top:16px"></div>
+      </div>`;
         }
 
-        /* ─── ORBITING RINGS ──────────────────────────────────── */
-        function makeRing(radius, tilt, color, opacity) {
-            const pts = [];
-            for (let i = 0; i <= 256; i++) {
-                const a = (i / 256) * Math.PI * 2;
-                pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
+        /* ═══════════════════════════════════════════════════════════
+           RENDER WEATHER
+        ═══════════════════════════════════════════════════════════ */
+        function renderWeatherPanel(cur, fore, geo, currency, rates) {
+            const city = cur.name || geo?.address?.city || geo?.address?.town || geo?.address?.county || '—';
+            const country = cur.sys?.country || geo?.address?.country || '';
+            const icon = weatherIcon(cur.weather[0].id, cur.weather[0].icon.slice(-1));
+            const desc = cur.weather[0].description;
+            const temp = fmtTemp(cur.main.temp);
+            const feels = fmtTemp(cur.main.feels_like);
+            const humid = cur.main.humidity;
+            const wind = `${Math.round(cur.wind.speed * 3.6)} km/h ${windDir(cur.wind.deg || 0)}`;
+            const vis = cur.visibility ? `${(cur.visibility / 1000).toFixed(1)} km` : '—';
+            const pressure = `${cur.main.pressure} hPa`;
+
+            // daily forecast from 3h data
+            const days = {};
+            for (const item of fore.list) {
+                const d = new Date(item.dt * 1000);
+                const key = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+                if (!days[key]) days[key] = { temps: [], icons: [], descs: [] };
+                days[key].temps.push(item.main.temp);
+                days[key].icons.push(weatherIcon(item.weather[0].id, 'd'));
+                days[key].descs.push(item.weather[0].description);
             }
-            const geo = new THREE.BufferGeometry().setFromPoints(pts);
-            const mat = new THREE.LineBasicMaterial({
-                color, transparent: true, opacity,
-                blending: THREE.AdditiveBlending, depthWrite: false,
-            });
-            const ring = new THREE.Line(geo, mat);
-            ring.rotation.x = tilt;
-            scene.add(ring);
-            return ring;
+
+            const forecastHTML = Object.entries(days).slice(0, 5).map(([day, d]) => {
+                const hi = Math.round(Math.max(...d.temps));
+                const lo = Math.round(Math.min(...d.temps));
+                const ic = d.icons[Math.floor(d.icons.length / 2)];
+                const dc = d.descs[Math.floor(d.descs.length / 2)];
+                return `<div class="forecast-item">
+        <span class="fc-day">${day}</span>
+        <span class="fc-icon">${ic}</span>
+        <span class="fc-desc">${dc}</span>
+        <span class="fc-temps">${hi}° <span class="fc-lo">/ ${lo}°</span></span>
+      </div>`;
+            }).join('');
+
+            // currency rates
+            let currencyHTML = '';
+            const flag = CURRENCY_FLAGS[currency] || '🏳️';
+            const name = CURRENCY_NAMES[currency] || currency;
+
+            if (Object.keys(rates).length > 0) {
+                const major = ['USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD'].filter(c => c !== currency).slice(0, 6);
+                const rateRows = major.map(c => {
+                    const rate = rates[c];
+                    if (!rate) return '';
+                    return `<div class="rate-row">
+          <span class="rate-label">${CURRENCY_FLAGS[c] || ''} ${c}</span>
+          <span class="rate-value">${rate.toFixed(4)}</span>
+        </div>`;
+                }).join('');
+
+                currencyHTML = `
+        <div class="forecast-title">💰 Moeda local</div>
+        <div class="currency-section">
+          <div class="currency-header">
+            <span class="currency-flag">${flag}</span>
+            <div>
+              <div class="currency-name">${name}</div>
+              <div class="currency-code">1 ${currency} =</div>
+            </div>
+          </div>
+          ${rateRows}
+          <button onclick="openConverterWith('${currency}')" style="
+            margin-top:12px; width:100%; padding:9px;
+            background:var(--accent); border:none; border-radius:9px;
+            color:#fff; font-size:0.83rem; font-weight:600; cursor:pointer;
+          ">Abrir conversor →</button>
+        </div>`;
+            }
+
+            document.getElementById('panelTitle').textContent = `${icon} ${city}`;
+            document.getElementById('panelBody').innerHTML = `
+      <div class="weather-hero">
+        <div class="w-location">📍 ${city}, ${country}</div>
+        <div class="w-main">
+          <span class="w-icon">${icon}</span>
+          <div>
+            <div class="w-temp">${temp}</div>
+            <div class="w-desc">${desc}</div>
+          </div>
+        </div>
+        <div class="w-grid">
+          <div class="w-stat"><div class="w-stat-label">Sensação</div><div class="w-stat-value">${feels}</div></div>
+          <div class="w-stat"><div class="w-stat-label">Umidade</div><div class="w-stat-value">${humid}%</div></div>
+          <div class="w-stat"><div class="w-stat-label">Vento</div><div class="w-stat-value">${wind}</div></div>
+          <div class="w-stat"><div class="w-stat-label">Pressão</div><div class="w-stat-value">${pressure}</div></div>
+        </div>
+      </div>
+
+      <div class="forecast-title">📅 Próximos dias</div>
+      <div class="forecast-list">${forecastHTML}</div>
+
+      ${currencyHTML}
+    `;
         }
 
-        const ring1 = makeRing(1.55, Math.PI / 3, 0x2255ff, 0.35);
-        const ring2 = makeRing(1.85, Math.PI / 6, 0x1133cc, 0.20);
-        const ring3 = makeRing(2.10, Math.PI / 2.2, 0x0022aa, 0.15);
-
-        /* ─── ORBITING PARTICLES ──────────────────────────────── */
-        function makeOrbitDot(orbitRadius, tilt, color) {
-            const geo = new THREE.SphereGeometry(0.018, 8, 8);
-            const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 });
-            const mesh = new THREE.Mesh(geo, mat);
-            // point light attached to the dot
-            const light = new THREE.PointLight(color, 1.5, 0.6);
-            mesh.add(light);
-            scene.add(mesh);
-            return { mesh, orbitRadius, tilt, angle: Math.random() * Math.PI * 2, speed: 0.006 + Math.random() * 0.004 };
-        }
-
-        const orbiters = [
-            makeOrbitDot(1.55, Math.PI / 3, 0x55aaff),
-            makeOrbitDot(1.55, Math.PI / 3, 0xaaddff),
-            makeOrbitDot(1.85, Math.PI / 6, 0x3366ff),
-            makeOrbitDot(2.10, Math.PI / 2.2, 0x2244cc),
+        /* ═══════════════════════════════════════════════════════════
+           CONVERTER
+        ═══════════════════════════════════════════════════════════ */
+        const ALL_CURRENCIES = [
+            'USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'HKD', 'NZD', 'SEK',
+            'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'ARS', 'CLP', 'COP', 'PEN',
+            'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'MYR', 'PHP', 'VND', 'NGN', 'ILS', 'SAR', 'AED',
+            'CZK', 'HUF', 'RON', 'UAH', 'BDT', 'PKR', 'QAR', 'KWD', 'BHD', 'OMR', 'EGP', 'MAD',
         ];
 
-        /* ─── STAR FIELD ──────────────────────────────────────── */
-        const starPos = [];
-        for (let i = 0; i < 5000; i++) {
-            const r = 30 + Math.random() * 70;
-            const phi = Math.acos(2 * Math.random() - 1);
-            const theta = Math.random() * Math.PI * 2;
-            starPos.push(
-                Math.sin(phi) * Math.cos(theta) * r,
-                Math.cos(phi) * r,
-                Math.sin(phi) * Math.sin(theta) * r,
-            );
+        function populateSelects() {
+            const from = document.getElementById('convFrom');
+            const to = document.getElementById('convTo');
+            from.innerHTML = '';
+            to.innerHTML = '';
+            for (const c of ALL_CURRENCIES) {
+                const f = CURRENCY_FLAGS[c] || '';
+                from.innerHTML += `<option value="${c}">${f} ${c}</option>`;
+                to.innerHTML += `<option value="${c}">${f} ${c}</option>`;
+            }
+            from.value = 'USD';
+            to.value = 'BRL';
         }
-        const starGeo = new THREE.BufferGeometry();
-        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-        const starMat = new THREE.PointsMaterial({
-            color: 0xffffff, size: 0.06,
-            transparent: true, opacity: 0.55,
-            blending: THREE.AdditiveBlending, depthWrite: false,
-        });
-        scene.add(new THREE.Points(starGeo, starMat));
 
-        /* ─── NEBULA (large soft glow clouds) ─────────────────── */
-        function makeNebula(x, y, z, color, size) {
-            const geo = new THREE.SphereGeometry(size, 8, 8);
-            const mat = new THREE.MeshBasicMaterial({
-                color, transparent: true, opacity: 0.04,
-                blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide,
+        async function initConverter() {
+            populateSelects();
+            await convert();
+            loadPopularRates();
+
+            document.getElementById('convAmount').addEventListener('input', convert);
+            document.getElementById('convFrom').addEventListener('change', async () => { ratesCache = {}; await convert(); loadPopularRates(); });
+            document.getElementById('convTo').addEventListener('change', convert);
+        }
+
+        async function convert() {
+            const amount = parseFloat(document.getElementById('convAmount').value) || 0;
+            const from = document.getElementById('convFrom').value;
+            const to = document.getElementById('convTo').value;
+            const res = document.getElementById('convResult');
+            res.textContent = '…';
+            try {
+                const rates = await fetchRates(from);
+                const rate = rates[to];
+                if (!rate) { res.textContent = '—'; return; }
+                const result = (amount * rate).toLocaleString('pt-BR', { maximumFractionDigits: 4 });
+                const rateStr = rate.toFixed(4);
+                res.innerHTML = `<div style="font-size:1.3rem">${result} ${to}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">1 ${from} = ${rateStr} ${to}</div>`;
+            } catch {
+                res.textContent = 'Erro ao buscar taxa';
+            }
+        }
+
+        async function loadPopularRates() {
+            const from = document.getElementById('convFrom').value;
+            const rates = await fetchRates(from);
+            const major = ['USD', 'EUR', 'BRL', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF'].filter(c => c !== from).slice(0, 6);
+            const html = major.map(c => {
+                const r = rates[c];
+                if (!r) return '';
+                return `<div class="rate-row">
+        <span class="rate-label">${CURRENCY_FLAGS[c] || ''} ${c} — ${CURRENCY_NAMES[c] || c}</span>
+        <span class="rate-value">${r.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}</span>
+      </div>`;
+            }).join('');
+            document.getElementById('popularRates').innerHTML = `
+      <div class="forecast-title" style="margin-top:0">Taxas populares (base: ${from})</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:4px 12px">${html}</div>`;
+        }
+
+        function swapCurrencies() {
+            const from = document.getElementById('convFrom');
+            const to = document.getElementById('convTo');
+            [from.value, to.value] = [to.value, from.value];
+            ratesCache = {};
+            convert();
+            loadPopularRates();
+        }
+
+        function openConverterWith(currency) {
+            document.getElementById('converterPanel').classList.add('open');
+            document.getElementById('weatherPanel').classList.remove('open');
+            document.getElementById('btnConverter').classList.add('active');
+            document.getElementById('btnWeather').classList.remove('active');
+            initConverter().then(() => {
+                document.getElementById('convFrom').value = currency;
+                ratesCache = {};
+                convert();
+                loadPopularRates();
             });
-            const m = new THREE.Mesh(geo, mat);
-            m.position.set(x, y, z);
-            scene.add(m);
-        }
-        makeNebula(-8, 4, -15, 0x1122ff, 10);
-        makeNebula(10, -3, -20, 0x002288, 14);
-        makeNebula(2, 8, -18, 0x0011aa, 8);
-
-        /* ─── LIGHTS ──────────────────────────────────────────── */
-        const sunLight = new THREE.DirectionalLight(0x6699ff, 4);
-        sunLight.position.set(-5, 3, 4);
-        scene.add(sunLight);
-
-        const fillLight = new THREE.DirectionalLight(0x112244, 1.2);
-        fillLight.position.set(5, -2, -3);
-        scene.add(fillLight);
-
-        const rimLight = new THREE.DirectionalLight(0x3355ff, 2.5);
-        rimLight.position.set(3, 0, -5);
-        scene.add(rimLight);
-
-        scene.add(new THREE.AmbientLight(0x080818, 2));
-
-        /* ─── MOUSE TRAIL (2D canvas) ─────────────────────────── */
-        const trailCanvas = document.getElementById('trail');
-        const ctx2d = trailCanvas.getContext('2d');
-        trailCanvas.width = window.innerWidth;
-        trailCanvas.height = window.innerHeight;
-
-        const trail = [];
-        const TRAIL_LEN = 80;
-        let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
-        let targetX = 0, targetY = 0;  // for globe rotation
-
-        window.addEventListener('mousemove', e => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            targetX = (e.clientX / window.innerWidth - 0.5) * 2;
-            targetY = (e.clientY / window.innerHeight - 0.5) * 2;
-            trail.push({ x: mouseX, y: mouseY, age: 0 });
-            if (trail.length > TRAIL_LEN) trail.shift();
-        });
-
-        // Click burst
-        const bursts = [];
-        window.addEventListener('click', e => {
-            bursts.push({ x: e.clientX, y: e.clientY, r: 0, alpha: 1 });
-        });
-
-        function drawTrail() {
-            ctx2d.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
-
-            // trail
-            for (let i = 1; i < trail.length; i++) {
-                const t = i / trail.length;
-                const prev = trail[i - 1];
-                const curr = trail[i];
-                ctx2d.beginPath();
-                ctx2d.moveTo(prev.x, prev.y);
-                ctx2d.lineTo(curr.x, curr.y);
-                ctx2d.strokeStyle = `rgba(80,160,255,${t * 0.6})`;
-                ctx2d.lineWidth = t * 2.5;
-                ctx2d.lineCap = 'round';
-                ctx2d.stroke();
-            }
-
-            // glow at cursor
-            if (trail.length > 0) {
-                const last = trail[trail.length - 1];
-                const grad = ctx2d.createRadialGradient(last.x, last.y, 0, last.x, last.y, 28);
-                grad.addColorStop(0, 'rgba(100,180,255,0.5)');
-                grad.addColorStop(1, 'rgba(100,180,255,0)');
-                ctx2d.beginPath();
-                ctx2d.arc(last.x, last.y, 28, 0, Math.PI * 2);
-                ctx2d.fillStyle = grad;
-                ctx2d.fill();
-            }
-
-            // click bursts
-            for (let i = bursts.length - 1; i >= 0; i--) {
-                const b = bursts[i];
-                ctx2d.beginPath();
-                ctx2d.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-                ctx2d.strokeStyle = `rgba(100,180,255,${b.alpha})`;
-                ctx2d.lineWidth = 2;
-                ctx2d.stroke();
-                b.r += 4;
-                b.alpha -= 0.04;
-                if (b.alpha <= 0) bursts.splice(i, 1);
-            }
         }
 
-        /* ─── RESIZE ──────────────────────────────────────────── */
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            trailCanvas.width = window.innerWidth;
-            trailCanvas.height = window.innerHeight;
+        /* ═══════════════════════════════════════════════════════════
+           SEARCH
+        ═══════════════════════════════════════════════════════════ */
+        let searchTimeout;
+
+        document.getElementById('searchInput').addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            const q = this.value.trim();
+            if (q.length < 3) { document.getElementById('searchResults').classList.remove('open'); return; }
+            searchTimeout = setTimeout(() => doSearch(q), 350);
         });
 
-        /* ─── ANIMATE ─────────────────────────────────────────── */
-        const clock = new THREE.Clock();
-        let rotX = 0, rotY = 0;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const t = clock.getElapsedTime();
-            const dt = clock.getDelta ? 0.016 : 0.016;
-
-            // globe rotation + mouse tilt
-            rotX += (-targetY * 0.22 - rotX) * 0.05;
-            rotY += (targetX * 0.22 - rotY) * 0.05;
-            globe.rotation.y += 0.0018 + rotY * 0.001;
-            globe.rotation.x = rotX;
-
-            // rings drift
-            ring1.rotation.z = t * 0.08;
-            ring2.rotation.z = -t * 0.05;
-            ring3.rotation.z = t * 0.04;
-
-            // orbiters
-            for (const o of orbiters) {
-                o.angle += o.speed;
-                const x = Math.cos(o.angle) * o.orbitRadius;
-                const z = Math.sin(o.angle) * o.orbitRadius;
-                const yy = Math.sin(o.angle * 0.5) * o.orbitRadius * Math.sin(o.tilt);
-                o.mesh.position.set(x, yy, z);
+        document.getElementById('searchInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                document.getElementById('searchResults').classList.remove('open');
             }
+        });
 
-            // arcs animate along globe
-            for (const a of arcs) {
-                if (t < a.delay) continue;
-                a.progress = Math.min(1, a.progress + a.speed);
-                a.mat.opacity = a.progress < 0.5
-                    ? a.progress * 0.9
-                    : (1 - a.progress) * 0.9;
-                if (a.progress >= 1) {
-                    // reset
-                    const p1 = randomSurfacePoint();
-                    const p2 = randomSurfacePoint();
-                    a.line.geometry.setFromPoints(makeArc(p1, p2));
-                    a.progress = 0;
-                    a.delay = t + Math.random() * 2;
-                }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-wrap')) {
+                document.getElementById('searchResults').classList.remove('open');
             }
+        });
 
-            // atmosphere pulse
-            atmoMat.uniforms.coeff.value = 0.78 + Math.sin(t * 1.3) * 0.04;
+        async function doSearch(q) {
+            const r = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6`,
+                { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }
+            );
+            const data = await r.json();
+            const el = document.getElementById('searchResults');
+            if (!data.length) { el.classList.remove('open'); return; }
 
-            // sun light slow orbit
-            sunLight.position.x = Math.cos(t * 0.08) * 5;
-            sunLight.position.z = Math.sin(t * 0.08) * 4;
+            el.innerHTML = data.map((item, i) =>
+                `<div class="search-result-item" data-i="${i}">${item.display_name}</div>`
+            ).join('');
+            el.classList.add('open');
 
-            drawTrail();
-            renderer.render(scene, camera);
+            el.querySelectorAll('.search-result-item').forEach((div, i) => {
+                div.addEventListener('click', () => {
+                    const item = data[i];
+                    const lat = parseFloat(item.lat);
+                    const lon = parseFloat(item.lon);
+                    map.flyTo([lat, lon], 8, { duration: 1.2 });
+                    el.classList.remove('open');
+                    document.getElementById('searchInput').value = '';
+                    map.fire('click', { latlng: L.latLng(lat, lon) });
+                });
+            });
         }
 
-        animate();
+        /* ═══════════════════════════════════════════════════════════
+           TOAST
+        ═══════════════════════════════════════════════════════════ */
+        function showToast(msg, ms = 2500) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), ms);
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           INIT HINT
+        ═══════════════════════════════════════════════════════════ */
+        setTimeout(() => showToast('🌍 Clique em qualquer lugar do mapa para ver o clima e a moeda local'), 1200);
     </script>
+
+    <!-- Google AdSense (ative depois de aprovado) -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <!-- Schema.org para SEO -->
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Atlas",
+  "url": "https://atlascw.com.br",
+  "description": "Mapa mundial interativo com previsão do tempo em tempo real e conversor de moedas.",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" }
+}
+</script>
+
 </body>
 
 </html>
